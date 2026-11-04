@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>るう（Luu）試作版</title>
-    <meta name="theme-color" content="#fff4e8" />
+    <meta name="theme-color" content="#fde9e1" />
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" type="image/png" href="./icon-192.png" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
@@ -15,10 +15,40 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="./bundle/index-eUCrapaq.js"></script>
+    <style>
+      /* 起動画面：JSより先に出るので、開いた瞬間から表示される */
+      html, body { background: #fde9e1; }
+      #splash {
+        position: fixed; inset: 0; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        background: radial-gradient(circle at 50% 42%, #fff8ee 0%, #fde6dc 55%, #f6cbc2 100%);
+        font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', sans-serif; color: #7a5a4c;
+        transition: opacity 0.6s ease, visibility 0.6s;
+      }
+      #splash.hide { opacity: 0; visibility: hidden; }
+      #splash .luu { width: min(52vw, 240px); animation: splash-in 0.9s cubic-bezier(.2,1.4,.4,1) both, splash-bob 2.4s ease-in-out 0.9s infinite; filter: drop-shadow(0 10px 14px rgba(200,130,120,.25)); }
+      #splash .splash-name { margin-top: 18px; font-size: 40px; font-weight: 700; letter-spacing: .12em; animation: splash-up .8s ease .35s both; }
+      #splash .splash-tag { margin-top: 6px; font-size: 14px; opacity: .8; letter-spacing: .08em; animation: splash-up .8s ease .6s both; }
+      #splash .sp { position: absolute; color: #ffd27a; font-size: 22px; animation: splash-twinkle 2.2s ease-in-out infinite; }
+      #splash .sp.p { color: #f7b3c2; }
+      @keyframes splash-in { from { transform: translateY(30px) scale(.6); opacity: 0; } }
+      @keyframes splash-bob { 50% { transform: translateY(-8px); } }
+      @keyframes splash-up { from { transform: translateY(12px); opacity: 0; } }
+      @keyframes splash-twinkle { 0%, 100% { opacity: .2; transform: scale(.7); } 50% { opacity: 1; transform: scale(1.1); } }
+      @media (prefers-reduced-motion: reduce) { #splash * { animation: none !important; } }
+    </style>
+    <script type="module" crossorigin src="./bundle/index-D3FRioVh.js"></script>
     <link rel="stylesheet" crossorigin href="./bundle/index-DDvHGoHK.css">
   </head>
   <body>
+    <div id="splash" aria-hidden="true">
+      <span class="sp" style="left: 22%; top: 26%">✦</span>
+      <span class="sp p" style="right: 20%; top: 31%; animation-delay: .7s">✦</span>
+      <span class="sp" style="right: 26%; bottom: 27%; animation-delay: 1.3s; font-size: 16px">✦</span>
+      <span class="sp p" style="left: 18%; bottom: 33%; animation-delay: 1.8s; font-size: 14px">✦</span>
+      <img class="luu" src="./assets/ureshii.webp" alt="" />
+      <div class="splash-name">るう</div>
+      <div class="splash-tag">きょうも、ちいさく、いっしょに。</div>
+    </div>
     <div id="root"></div>
   </body>
 </html>
