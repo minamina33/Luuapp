@@ -708,6 +708,10 @@ export function cancelSleep(s: GameState) {
   const sess = currentSleep(s);
   if (sess) s.sleeps = s.sleeps.filter((x) => x.id !== sess.id);
 }
+/** まちがえて押した睡眠の記録を消す。冒険の結果・おみやげ・星はそのまま（取り上げない） */
+export function deleteSleep(s: GameState, sessId: string) {
+  s.sleeps = s.sleeps.filter((x) => x.id !== sessId);
+}
 /** お昼前になっても「おはよう」が押されていなければ、るうは先に起きる */
 export function shouldAutoWake(s: GameState) {
   const sess = currentSleep(s);

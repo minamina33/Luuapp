@@ -15,6 +15,7 @@ import {
   addBond,
   currentSleep,
   dayKey,
+  deleteSleep,
   devAddDays,
   lightStar,
   goToSleep,
@@ -498,12 +499,13 @@ export function SleepEditSheet({ id }: { id: string }) {
   const sess = s.sleeps.find((x) => x.id === id);
   const [start, setStart] = useState(sess ? toLocalInput(sess.startedAt) : '');
   const [end, setEnd] = useState(sess?.endedAt ? toLocalInput(sess.endedAt) : '');
+  const [askDelete, setAskDelete] = useState(false);
   if (!sess) return null;
   const h = end ? (new Date(end).getTime() - new Date(start).getTime()) / 3600_000 : null;
   const bad = h !== null && h < 0;
   return (
     <Sheet title="睡眠の記録を直す" onClose={nav.close}>
-      <p className="muted small">押し忘れたときは、ここで時刻を直せます。冒険の結果や星は変わりません。</p>
+      <p className="muted small">押し忘れたときは、ここで時刻を直せます。まちがえて押した記録は、いちばん下から消せます。冒険の結果や星は変わりません。</p>
       <div className="field">
         <div className="label">おやすみ</div>
         <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} />
@@ -531,6 +533,27 @@ export function SleepEditSheet({ id }: { id: string }) {
       >
         保存する
       </button>
+      <button className="btn ghost block danger-text" onClick={() => setAskDelete(true)}>
+        この記録を消す
+      </button>
+      {askDelete && (
+        <Confirm
+          text={
+            <>
+              この睡眠の記録を消しますか？
+              <br />
+              <span className="muted small">まちがえて押したときに使ってね。冒険のおみやげや星はそのまま残ります。</span>
+            </>
+          }
+          okLabel="消す"
+          danger
+          cancel={() => setAskDelete(false)}
+          ok={() => {
+            update((d) => void deleteSleep(d, id));
+            nav.close();
+          }}
+        />
+      )}
     </Sheet>
   );
 }
