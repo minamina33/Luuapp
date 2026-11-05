@@ -4022,14 +4022,23 @@ a.btn {
   box-shadow: 0 2px 6px rgba(150, 100, 80, 0.12);
 }
 .lock-screen {
-  min-height: 100%;
+  height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: 8px;
   padding: 24px;
   background: radial-gradient(circle at 50% 30%, #fff8ee, #fde6dc);
+}
+.lock-screen > * {
+  flex-shrink: 0;
+}
+/* ロック画面から開く相談先（小さい画面でも全部見えるように上からならべる） */
+.lock-screen.lock-care {
+  align-items: stretch;
+  justify-content: flex-start;
 }
 .lock-screen > img,
 .lock-screen > .luu-img {

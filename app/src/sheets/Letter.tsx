@@ -5,7 +5,7 @@ import { Confirm, Sheet } from '../components/ui';
 import { LuuImg } from '../components/LuuImg';
 import { asset } from '../assets';
 import { FEEDBACK_URL } from '../config';
-import { seal, unseal, SEALED_PREFIX } from '../secure';
+import { seal, unseal, isSealed, MIN_PASS_LENGTH } from '../secure';
 import { dayKey, fmtDur, sleepHours } from '../game/logic';
 import { withYou } from '../data/content';
 import { CATEGORY_NAMES, item } from '../data/items';
@@ -181,7 +181,7 @@ export function BackupSheet() {
   const [inPass, setInPass] = useState('');
   const [pending, setPending] = useState<GameState | null>(null);
   const [err, setErr] = useState('');
-  const sealedIn = input.trim().startsWith(SEALED_PREFIX);
+  const sealedIn = isSealed(input);
   const make = async () => {
     setBusy(true);
     const c = await seal(JSON.stringify(s), pass);
@@ -201,10 +201,10 @@ export function BackupSheet() {
         <b>引き継ぎコードをつくる</b>
         <p className="muted small">いまの記録・るうたち・アイテムを、あいことばで鍵をかけたコードにします。日記やメモも入っているので、あいことばを知らない人には読めないようにしてあります。</p>
         <label className="field">
-          <div className="label">あいことば（4文字以上・わすれないでね）</div>
+          <div className="label">あいことば（{MIN_PASS_LENGTH}文字以上・わすれないでね）</div>
           <input type="password" value={pass} maxLength={64} onChange={(e) => (setPass(e.target.value), setCode(''))} placeholder="自分だけがわかることば" />
         </label>
-        <button className="btn primary block" disabled={pass.length < 4 || busy} onClick={make}>
+        <button className="btn primary block" disabled={pass.length < MIN_PASS_LENGTH || busy} onClick={make}>
           {busy ? 'つくっています…' : code ? 'もう一度コピーする' : 'コードをつくってコピー'}
         </button>
         {code && (
@@ -218,7 +218,7 @@ export function BackupSheet() {
       <div className="card">
         <b>引き継ぎコードを貼りつける</b>
         <p className="muted small">別の端末やブラウザで作ったコードを貼りつけると、その内容に置きかわります。</p>
-        <textarea className="code-box" rows={4} value={input} onChange={(e) => (setInput(e.target.value), setErr(''))} placeholder="LUU2: から始まる文字列" />
+        <textarea className="code-box" rows={4} value={input} onChange={(e) => (setInput(e.target.value), setErr(''))} placeholder="LUU から始まる文字列" />
         {sealedIn && (
           <label className="field">
             <div className="label">そのコードのあいことば</div>

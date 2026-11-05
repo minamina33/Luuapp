@@ -9,25 +9,39 @@ const dec = new TextDecoder();
 const b64 = (u: Uint8Array) => btoa(String.fromCharCode(...u));
 const unb64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0)) as Uint8Array<ArrayBuffer>;
 
-async function keyFrom(pass: string, salt: Uint8Array<ArrayBuffer>) {
+async function keyFrom(pass: string, salt: Uint8Array<ArrayBuffer>, iterations: number) {
   const base = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
-  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations: 150_000, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', salt, iterations, hash: 'SHA-256' }, base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
 }
 
-export const SEALED_PREFIX = 'LUU2:';
-/** 文字列をあいことばで暗号化（LUU2:salt.iv.data） */
+/** 今つくるコードの形式。鍵づくりの回数を増やしたので LUU2 から上げた */
+const SEALED_PREFIX = 'LUU3:';
+const SEALED_ITERATIONS = 600_000;
+/** 前の形式（LUU2）のコードも開けるように残しておく */
+const OLD_SEALED_PREFIX = 'LUU2:';
+const OLD_SEALED_ITERATIONS = 150_000;
+/** あいことばの最低文字数（新しくコードをつくるときだけ確認する） */
+export const MIN_PASS_LENGTH = 8;
+
+export const isSealed = (code: string) => {
+  const t = code.trim();
+  return t.startsWith(SEALED_PREFIX) || t.startsWith(OLD_SEALED_PREFIX);
+};
+/** 文字列をあいことばで暗号化（LUU3:salt.iv.data） */
 export async function seal(text: string, pass: string) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await keyFrom(pass, salt);
+  const key = await keyFrom(pass, salt, SEALED_ITERATIONS);
   const data = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text)));
   return `${SEALED_PREFIX}${b64(salt)}.${b64(iv)}.${b64(data)}`;
 }
 /** 暗号化されたコードを開く。あいことばがちがえば null */
 export async function unseal(code: string, pass: string): Promise<string | null> {
   try {
-    const [salt, iv, data] = code.trim().slice(SEALED_PREFIX.length).split('.').map(unb64);
-    const key = await keyFrom(pass, salt);
+    const t = code.trim();
+    const iterations = t.startsWith(OLD_SEALED_PREFIX) ? OLD_SEALED_ITERATIONS : SEALED_ITERATIONS;
+    const [salt, iv, data] = t.slice(SEALED_PREFIX.length).split('.').map(unb64);
+    const key = await keyFrom(pass, salt, iterations);
     const out = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
     return dec.decode(out);
   } catch {

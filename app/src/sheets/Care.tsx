@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { LuuImg } from '../components/LuuImg';
+import { Hotlines } from '../components/Hotlines';
 import { useGame } from '../game/store';
 import { useNav, runRec } from '../nav';
 import { Confirm, MoodFace, Sheet, fmtDateTime } from '../components/ui';
@@ -8,7 +9,7 @@ import { sound } from '../sound';
 import { isCrisisText } from '../secure';
 import { LIMITS, MAX_TASKS, MOOD_PER_DAY, SHRINK_AFTER_DAYS, STARS } from '../config';
 import { dayKey, doneToday, nowIso, onCare, recordSoloNight, returnHome, setCompletionTime, setWakeTime, startOuting, TIME_RANGES, today, uid } from '../game/logic';
-import { HOTLINES, HABIT_MAP, MOOD_REASONS, MOOD_REPLIES, MOODS, recommend, RECS, REST_IDEAS, suggestHabits, SUPPORT_LINK, WALK_KINDS, OUTINGS, OUTING_REPLIES, withYou, WHEN_NAMES, type RecId } from '../data/content';
+import { HABIT_MAP, MOOD_REASONS, MOOD_REPLIES, MOODS, recommend, RECS, REST_IDEAS, suggestHabits, SUPPORT_LINK, WALK_KINDS, OUTINGS, OUTING_REPLIES, withYou, WHEN_NAMES, type RecId } from '../data/content';
 import type { CareTask, MoodValue, OutingKind } from '../types';
 
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
@@ -1062,26 +1063,7 @@ export function HelpSheet({ crisis }: { crisis?: boolean }) {
           {crisis ? `話してくれて、ありがとう。${s.pet.name}はここにいるよ。でも、その気持ちはひとりで抱えないでほしいな` : `つらいときは、ひとりで抱えなくていいんだよ`}
         </div>
       </div>
-      <p className="small">
-        いますぐ誰かと話したいときは、ここに電話できます。名前を言わなくても大丈夫です。
-      </p>
-      <div className="hotlines">
-        {HOTLINES.map((h) => (
-          <a key={h.tel} className="hotline" href={`tel:${h.tel.replace(/-/g, '')}`}>
-            <span className="hl-name">{h.name}</span>
-            <span className="hl-tel">📞 {h.tel}</span>
-            <span className="muted tiny">{h.note}</span>
-          </a>
-        ))}
-      </div>
-      <div className="card">
-        <b>電話がにがてなときは</b>
-        <p className="small">LINEやチャットで相談できる窓口もあります。</p>
-        <a href={SUPPORT_LINK.url} target="_blank" rel="noreferrer">
-          {SUPPORT_LINK.label}
-        </a>
-      </div>
-      <p className="small">身近な人に「ちょっと話を聞いて」と送るだけでも大丈夫。命の危険を感じるときは、迷わず 119 に電話してください。</p>
+      <Hotlines />
       <p className="muted tiny">このアプリはセルフケアを手助けするもので、医療や相談のかわりにはなりません。書いたことは、この端末の外には送られません。</p>
       <button className="btn primary block" onClick={nav.close}>
         {s.pet.name}のところへもどる

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { LuuImg } from './LuuImg';
+import { Hotlines } from './Hotlines';
 import { checkPin, hashPin } from '../secure';
 
 /** 4けたの番号入力（ロック画面・設定の両方で使う） */
@@ -44,6 +45,19 @@ export function PinPad({ onDone, title, sub, error }: { onDone: (pin: string) =>
 export function LockScreen({ hash, onUnlock }: { hash: string; onUnlock: () => void }) {
   const [err, setErr] = useState('');
   const [help, setHelp] = useState(false);
+  // 番号が思い出せなくても、相談先だけはいつでも開けるようにする
+  const [care, setCare] = useState(false);
+  if (care) {
+    return (
+      <div className="lock-screen lock-care">
+        <b>つらいときは</b>
+        <Hotlines />
+        <button className="btn primary block" onClick={() => setCare(false)}>
+          もどる
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="lock-screen">
       <LuuImg sprite="g_sleep" alt="" />
@@ -55,6 +69,9 @@ export function LockScreen({ hash, onUnlock }: { hash: string; onUnlock: () => v
           else setErr('番号がちがうみたい');
         }}
       />
+      <button className="btn soft small-btn" onClick={() => setCare(true)}>
+        つらいときは（相談先）
+      </button>
       <button className="btn ghost small-btn" onClick={() => setHelp(!help)}>
         番号をわすれたとき
       </button>
