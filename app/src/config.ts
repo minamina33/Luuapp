@@ -88,8 +88,8 @@ export const PERSONALITY_NAMES: Record<Personality, string> = {
   adventurous: 'ぼうけん',
 };
 export const PERSONALITY_POINT = 2;
-/** 1日に加算できる性格ポイントの合計上限 */
-export const PERSONALITY_DAILY_CAP = 6;
+/** 1日に加算できる性格ポイントの上限（性格ごと。なでるだけで他の性格の分を使い切らないように） */
+export const PERSONALITY_DAILY_CAP = 3;
 
 // ---- 冒険 -------------------------------------------------------
 export const RARITY_RATES: Record<Rarity, number> = {

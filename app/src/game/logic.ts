@@ -71,7 +71,7 @@ export function initialState(): GameState {
     rewardKeys: {},
     album: [],
     pity: 0,
-    personalityDaily: { day: '', total: 0 },
+    personalityDaily: { day: '', got: {} },
     usedToys: [],
     debug: { enabled: false, timeOffsetMs: 0, forceRarity: null },
     settings: { se: true, bgm: false, muted: false, reduceMotion: false },
@@ -303,16 +303,17 @@ export function switchPet(s: GameState, id: string) {
   next.roomSlots = s.pet.roomSlots;
   s.otherPets.splice(i, 1, s.pet);
   s.pet = next;
-  s.personalityDaily = { day: '', total: 0 };
+  s.personalityDaily = { day: '', got: {} };
 }
 
 export function addPersonality(s: GameState, p: Personality, pts = 2) {
   const d = today(s);
-  if (s.personalityDaily.day !== d) s.personalityDaily = { day: d, total: 0 };
-  const room = PERSONALITY_DAILY_CAP - s.personalityDaily.total;
-  const n = Math.max(0, Math.min(pts, room));
+  // 前の形式（total だけの保存データ）は got がないので、その日の分から数え直す
+  if (s.personalityDaily.day !== d || !s.personalityDaily.got) s.personalityDaily = { day: d, got: {} };
+  const got = s.personalityDaily.got[p] ?? 0;
+  const n = Math.max(0, Math.min(pts, PERSONALITY_DAILY_CAP - got));
   s.pet.personalityScores[p] += n;
-  s.personalityDaily.total += n;
+  s.personalityDaily.got[p] = got + n;
 }
 
 /** セルフケア実施の共通処理（ふれあい日数・その日最初のケア親密度・記録） */

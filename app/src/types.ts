@@ -184,7 +184,7 @@ export interface GameState {
   album: AlbumEvent[];
   /** シークレットが出ていない連続冒険回数 */
   pity: number;
-  personalityDaily: { day: string; total: number };
+  personalityDaily: { day: string; got: Partial<Record<Personality, number>> };
   usedToys: string[];
   debug: { enabled: boolean; timeOffsetMs: number; forceRarity: Rarity | null };
   settings: { se: boolean; bgm: boolean; muted: boolean; reduceMotion: boolean; /** アプリのロック番号（ソルト付きハッシュ） */ lockHash?: string };
