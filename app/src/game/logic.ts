@@ -14,6 +14,7 @@ import {
   EXCHANGE_STARS,
   PERSONALITY_BIAS,
   PERSONALITY_DAILY_CAP,
+  PERSONALITY_REVEAL_POINTS,
   PERSONALITY_NAMES,
   RARITY_RATES,
   SECRET_PITY,
@@ -132,6 +133,9 @@ export function bondProgress(points: number) {
 }
 export function personalityTop(s: GameState): { main: Personality | null; sub: Personality | null } {
   const e = Object.entries(s.pet.personalityScores).sort((a, b) => b[1] - a[1]) as Array<[Personality, number]>;
+  // 数日いっしょにすごすまでは「まだわからない」。少しずつ見えてくるようにする
+  const total = e.reduce((a, [, v]) => a + v, 0);
+  if (total < PERSONALITY_REVEAL_POINTS) return { main: null, sub: null };
   const main = e[0][1] > 0 ? e[0][0] : null;
   const sub = e[1][1] > 0 && e[1][1] >= e[0][1] * 0.5 ? e[1][0] : null;
   return { main, sub };

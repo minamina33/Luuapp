@@ -90,6 +90,8 @@ export const PERSONALITY_NAMES: Record<Personality, string> = {
 export const PERSONALITY_POINT = 2;
 /** 1日に加算できる性格ポイントの上限（性格ごと。なでるだけで他の性格の分を使い切らないように） */
 export const PERSONALITY_DAILY_CAP = 3;
+/** 性格が見えてくるのに必要な点数の合計（これより少ないうちは「まだわからない」） */
+export const PERSONALITY_REVEAL_POINTS = 20;
 
 // ---- 冒険 -------------------------------------------------------
 export const RARITY_RATES: Record<Rarity, number> = {
