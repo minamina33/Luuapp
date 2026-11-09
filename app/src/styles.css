@@ -669,6 +669,8 @@ h3 {
 }
 .sleep-panel {
   position: absolute;
+  /* 寝ているるう（2）や夢の吹き出し（3）より前に出して、メッセージを読めるように */
+  z-index: 4;
   left: 8%;
   right: 8%;
   bottom: 5%;

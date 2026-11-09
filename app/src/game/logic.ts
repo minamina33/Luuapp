@@ -727,17 +727,26 @@ export function cancelSleep(s: GameState) {
 export function deleteSleep(s: GameState, sessId: string) {
   s.sleeps = s.sleeps.filter((x) => x.id !== sessId);
 }
+/**
+ * るうが先に起きる時刻：おやすみから6時間以上たったあとの、最初のお昼前（11時）。
+ * アプリを何日か開かなかったときも「開いた日の11時」ではなく、その晩の次の朝で区切る
+ */
+function autoWakeMs(startedAt: string) {
+  const t0 = new Date(startedAt).getTime() + 6 * 3600_000;
+  const d = new Date(t0);
+  if (d.getHours() >= AUTO_WAKE_HOUR) return t0; // 昼寝など：6時間たったところで起きる
+  d.setHours(AUTO_WAKE_HOUR, 0, 0, 0);
+  return d.getTime();
+}
 /** お昼前になっても「おはよう」が押されていなければ、るうは先に起きる */
 export function shouldAutoWake(s: GameState) {
   const sess = currentSleep(s);
-  if (!sess) return false;
-  const now = nowMs(s);
-  return hourOf(now) >= AUTO_WAKE_HOUR && now - new Date(sess.startedAt).getTime() >= 6 * 3600_000;
+  return !!sess && nowMs(s) >= autoWakeMs(sess.startedAt);
 }
 export function autoWakeAt(s: GameState) {
-  const d = new Date(nowMs(s));
-  d.setHours(AUTO_WAKE_HOUR, 0, 0, 0);
-  return d.toISOString();
+  const sess = currentSleep(s);
+  const now = nowMs(s);
+  return new Date(sess ? Math.min(autoWakeMs(sess.startedAt), now) : now).toISOString();
 }
 /** 寝ていた時間が長いときは「何時ごろ起きた？」を聞く */
 export const ASK_WAKE_HOURS = 12;
@@ -747,9 +756,12 @@ export function setWakeTime(s: GameState, sessId: string, hour: number | null | 
   if (!x || !x.endedAt) return;
   if (hour === 'keep') return void (x.approx = true);
   if (hour === null) return void (x.unknown = true);
-  const d = new Date(x.endedAt);
+  // おやすみのあと、はじめてその時刻になったとき（何日も開かなかったときも、その晩の次の朝にする）
+  const st = new Date(x.startedAt).getTime();
+  const d = new Date(st);
   d.setHours(hour, 30, 0, 0);
-  if (d.getTime() > new Date(x.startedAt).getTime()) {
+  if (d.getTime() <= st) d.setDate(d.getDate() + 1);
+  if (d.getTime() <= new Date(x.endedAt).getTime()) {
     x.endedAt = d.toISOString();
     x.approx = true;
   }
