@@ -605,7 +605,7 @@ h3 {
   box-shadow: 0 3px 10px rgba(120, 80, 50, 0.15);
 }
 .corner-btn small {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--ink-2);
 }
 .corner-btn.left {
@@ -2488,7 +2488,7 @@ button.hdr-pet {
   gap: 1px;
 }
 .room-egg small {
-  font-size: 10.5px;
+  font-size: 11px;
   background: rgba(255, 255, 255, 0.85);
   border-radius: 999px;
   padding: 1px 7px;
@@ -2965,7 +2965,7 @@ textarea.code-box {
 /* ---------------- ごはん・あそぶの回数 ---------------- */
 .interact button small {
   display: block;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--ink-2);
   margin-left: 2px;
 }
@@ -3173,7 +3173,7 @@ textarea.code-box {
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
 }
 .day-reasons {
@@ -3409,7 +3409,7 @@ textarea.code-box {
   height: auto;
 }
 .sky-cell small {
-  font-size: 10.5px;
+  font-size: 11px;
   opacity: 0.85;
   text-align: center;
   line-height: 1.3;
