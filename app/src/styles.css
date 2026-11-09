@@ -1968,12 +1968,12 @@ textarea.journal {
   color: var(--accent-ink);
 }
 .oversleep {
+  align-self: center;
   background: rgba(255, 255, 255, 0.92);
-  border-radius: 14px;
-  padding: 8px 10px;
+  border-radius: 999px;
+  padding: 5px 14px;
   font-size: 12px;
-  line-height: 1.6;
-  text-align: left;
+  line-height: 1.5;
 }
 .howto {
   display: flex;

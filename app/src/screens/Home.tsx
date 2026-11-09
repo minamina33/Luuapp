@@ -425,11 +425,7 @@ export default function Home() {
               </div>
               <div className="sleep-panel">
                 {overslept ? (
-                  <div className="oversleep">
-                    <b>{s.pet.name}「ずいぶん長く眠ってるみたい。もう起きてる？」</b>
-                    <br />
-                    おやすみから{Math.floor(sleptHours)}時間たっているよ。押し忘れていたら、時刻を直してから起きよう。
-                  </div>
+                  <div className="oversleep">おやすみから{Math.floor(sleptHours)}時間たったよ。もう起きてる？</div>
                 ) : (
                   <div className="sleep-text">
                     {tod === 'night' ? `${s.pet.name}はぐっすり。夢の中で冒険中…` : `朝だよ。${s.pet.name}はまだ夢の中…起こしてあげよう`}
