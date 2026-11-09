@@ -185,7 +185,9 @@ h3 {
 /* ---------------- タブバー ---------------- */
 .tabbar {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  /* タブの数に合わせて均等にならべる（数が変わっても左右がそろうように） */
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   background: #fff;
   border-radius: 22px 22px 0 0;
   box-shadow: 0 -4px 20px rgba(150, 100, 70, 0.1);
