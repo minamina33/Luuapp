@@ -25,7 +25,7 @@ import {
 } from '../config';
 import { BOND_GIFTS, INITIAL_INVENTORY, ITEMS, item, SEASON_GIFTS, STAGE_GIFTS } from '../data/items';
 import { COLOR_MAP, COLORS } from '../data/colors';
-import { CHEER_AT, EGG_CHOICES, EGG_NIGHTS, EGG_SECRET_RATE, PLAY_BASE, PLAY_MAX, SEASON_RATE, SERIES_RATE, SNACKS_PER_DAY } from '../config';
+import { CHEER_AT, EGG_CHOICES, EGG_NIGHTS, EGG_SECRET_RATE, PLAY_BASE, PLAY_MAX, SEASON_RATE, SERIES_RATE, SNACKS_PER_DAY, FOODIE_EXTRA_SNACKS } from '../config';
 import { FOODS, storyFor } from '../data/content';
 import { RECIPES, recipeFor } from '../data/recipes';
 import { CARE_CHARM, CHARMS, heartLine, MAX_CHARMS, WORDS_LINES, type CharmId } from '../data/charms';
@@ -94,7 +94,7 @@ export function newPet(color: ColorId, name: string, at: string, id = 'pet_' + u
     name,
     totalBondPoints: 0,
     activeDays: [],
-    personalityScores: { energetic: 0, calm: 0, affectionate: 0, adventurous: 0 },
+    personalityScores: { energetic: 0, calm: 0, affectionate: 0, adventurous: 0, foodie: 0 },
     outfit: null,
     roomSlots: { bed: 'bed_default', rug: 'rug_default', curtain: 'cur_default', wall: null, wall2: null, chest: null, top: null, top2: null, plush: null, floor: null, floor2: null },
   };
@@ -384,7 +384,13 @@ export function dailyView(s: GameState) {
   return s.pet.daily && s.pet.daily.day === d ? s.pet.daily : { day: d, meals: [] as string[], snack: false, plays: 0 };
 }
 export const canEatMeal = (s: GameState) => !dailyView(s).meals.includes(mealSlot(nowMs(s)));
-export const canEatSnack = (s: GameState) => !dailyView(s).snack || SNACKS_PER_DAY > 1;
+export const snacksEaten = (s: GameState) => {
+  const v = dailyView(s);
+  return v.snacks ?? (v.snack ? 1 : 0);
+};
+/** おやつの回数（くいしんぼうの子は多め） */
+export const snackLimit = (s: GameState) => SNACKS_PER_DAY + (personalityTop(s).main === 'foodie' ? FOODIE_EXTRA_SNACKS : 0);
+export const canEatSnack = (s: GameState) => snacksEaten(s) < snackLimit(s);
 export const playLimit = (s: GameState) => Math.min(PLAY_MAX, PLAY_BASE + careCountToday(s));
 export const playsLeft = (s: GameState) => Math.max(0, playLimit(s) - dailyView(s).plays);
 export function nextMeal(s: GameState): string {
@@ -440,12 +446,14 @@ function pickWeighted<T extends string>(r: () => number, w: Partial<Record<T, nu
   }
   return e[e.length - 1][0];
 }
-const BIAS_CAT: Record<Personality, ItemCategory> = {
+// 性格ごとに見つけやすいおみやげ（くいしんぼうは種類ではなく、ごはんになるものと食べもの系の見た目のもの）
+const BIAS_CAT: Record<Exclude<Personality, 'foodie'>, ItemCategory> = {
   energetic: 'toy',
   calm: 'furniture',
   affectionate: 'outfit',
   adventurous: 'collectible',
 };
+const likes = (p: Personality, i: ItemDef) => (p === 'foodie' ? !!(i.food || i.tasty) : BIAS_CAT[p] === i.category);
 export function unlockedAreas(stage: number): Area[] {
   return Object.keys(AREA_RATES[stage - 1]) as Area[];
 }
@@ -525,7 +533,7 @@ export function rollAdventure(s: GameState, session: SleepSession): AdventureRes
   if (pool.length === 0) pool = base;
   const weights: Record<string, number> = {};
   pool.forEach((i) => {
-    weights[i.id] = main && BIAS_CAT[main] === i.category ? PERSONALITY_BIAS : 1;
+    weights[i.id] = main && likes(main, i) ? PERSONALITY_BIAS : 1;
   });
   const itemId = pickWeighted<string>(r, weights);
   const it = item(itemId);
@@ -590,6 +598,8 @@ export function wakeUp(s: GameState, f: Feedback, endedAt?: string): AdventureRe
     adv.petId = s.pet.id;
     addItem(s, null, adv.itemId);
     craftNotice(s, f, adv.itemId);
+    // 夢の冒険から帰ってくると、こうきしんがすこし育つ
+    addPersonality(s, 'adventurous', 1);
     if (first) s.album.push({ id: uid(), at: nowIso(s), kind: 'discovery', title: `はじめての発見「${item(adv.itemId).title}」`, detail: `${adv.area}` });
     grantStars(s, f, `adv:${sess.id}`, 'adventure', adv.stars, false, adv.id);
     // ほしのおまもり：夜空に星をひとつ灯す
@@ -802,13 +812,14 @@ export function lowStreak(s: GameState) {
 }
 
 // ---------------------------------------------------------------- とくい（性格が見える）
-export const TOKUI: Record<Personality, string> = { energetic: 'からだを動かすこと', calm: '本を読むこと', affectionate: 'そばにいること', adventurous: '知らない場所を想像すること' };
+export const TOKUI: Record<Personality, string> = { energetic: 'からだを動かすこと', calm: '本を読むこと', affectionate: 'そばにいること', adventurous: '知らない場所を想像すること', foodie: 'おいしいものをさがすこと' };
 /** とくいのしぐさ（こども以上）。prop は横に出す小物の絵 */
 export const TOKUI_ACTS: Record<Personality, { pose: string; anim: 'hop' | 'sway' | 'tilt'; prop?: string; lines: string[] }> = {
   energetic: { pose: 'd_stretch', anim: 'hop', lines: ['いち、に！たいそうしてるの', 'からだを動かすと、きもちいいね', 'まだまだ、げんきだよ！'] },
   calm: { pose: 'g_think', anim: 'tilt', prop: 'it2_ehon', lines: ['ふむふむ…この本、すき', 'しずかな時間って、いいね', 'つづきが気になる…'] },
   affectionate: { pose: 'p_amae', anim: 'sway', prop: 'it2_bowbunny', lines: ['{you}のそば、おちつく', 'ぎゅってしてもいい？', 'いっしょにいられて、うれしいな'] },
   adventurous: { pose: 'g_lookup', anim: 'tilt', prop: 'it2_book_adv', lines: ['つぎは、どこへいこうかな', 'ぼうけん手帳に、かいておこう', 'あの雲の向こう、なにがあるんだろう'] },
+  foodie: { pose: 'ureshii', anim: 'hop', prop: 'it2_carrot', lines: ['おなか、ぐぅってなった…', 'つぎのごはん、なにかな？', 'おいしいものって、しあわせだね'] },
 };
 /** つぎの成長まであと何日か（おとななら null） */
 export function daysToNextStage(s: GameState) {

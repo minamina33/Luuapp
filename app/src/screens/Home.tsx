@@ -6,7 +6,7 @@ import { LuuImg } from '../components/LuuImg';
 import { SPRITES, PCT_PER_PX } from '../assets';
 import { Confirm, MoodFace } from '../components/ui';
 import { asset, ROOM_ASPECT } from '../assets';
-import { BOND_POINTS, STAGE_SCALE } from '../config';
+import { BOND_POINTS, FOODIE_MEALS_PER_DAY, SNACKS_PER_DAY, STAGE_SCALE } from '../config';
 import {
   addBond,
   addPersonality,
@@ -22,14 +22,14 @@ import {
   today,
   wakeUp,
 } from '../game/logic';
-import { OUTINGS, sleepTalk, linePool, withYou, BASIC_PLAYS, FOODS, IDLE_LINES, IDLE_POSES, MOODS, MORNING_LINES, NIGHT_LINES, PET_LINES, recommend, RECS, TOY_PLAY } from '../data/content';
+import { OUTINGS, sleepTalk, linePool, withYou, BASIC_PLAYS, FOODS, IDLE_LINES, IDLE_POSES, MOODS, MORNING_LINES, NIGHT_LINES, PET_LINES, recommend, RECS, TOY_PLAY, FOODIE_EAT_LINES, FOODIE_SNACK_LINES } from '../data/content';
 import { item, ITEMS } from '../data/items';
 import type { MoodValue } from '../types';
 import { sound } from '../sound';
 import { Egg } from '../components/Egg';
 import { isStandalone, letterAuthor, unreadLetter } from '../sheets/Letter';
 import { AREA_INFO } from '../config';
-import { dreamPreview, seasonOf, canEatMeal, canEatSnack, careCountToday, MEAL_NAMES, mealSlot, nextMeal, petDaily, playsLeft, tasksForToday } from '../game/logic';
+import { dreamPreview, seasonOf, canEatMeal, canEatSnack, snackLimit, snacksEaten, careCountToday, MEAL_NAMES, mealSlot, nextMeal, petDaily, playsLeft, tasksForToday } from '../game/logic';
 import { CHEER_AT, MOOD_PER_DAY } from '../config';
 import { goHome } from '../sheets/Care';
 import { daysToNextStage, TOKUI_ACTS, dayNumber, lowStreak, skyOpen, OUTING_AUTO_RETURN_H, ASK_WAKE_HOURS, autoWakeAt, canCancelSleep, cancelSleep, lastNightSolo, nightCharms, shouldAutoWake, soloSleeping } from '../game/logic';
@@ -224,23 +224,34 @@ export default function Home() {
     setMenu(null);
     // ごはんは朝・昼・夜に1回ずつ、おやつは1日1回
     if (snack ? !canEatSnack(s) : !canEatMeal(s)) return;
+    // くいしんぼうの子の、ふえた分のおやつ（親密度は入れない）
+    const extraSnack = snack && snacksEaten(s) >= SNACKS_PER_DAY;
     update((d) => {
       const dd = petDaily(d);
-      if (snack) dd.snack = true;
-      else dd.meals.push(mealSlot(nowMs(d)));
+      if (snack) {
+        dd.snacks = (dd.snacks ?? (dd.snack ? 1 : 0)) + 1;
+        dd.snack = true;
+      }
+      else {
+        dd.meals.push(mealSlot(nowMs(d)));
+        // ごはん（おやつはのぞく）で、くいしんぼうがすこし育つ
+        if (dd.meals.length <= FOODIE_MEALS_PER_DAY) addPersonality(d, 'foodie', 1);
+      }
     });
     sound.se(f.motion === 'drink' ? 'pet' : 'munch');
     update((d, fb) => {
       markActive(d, fb);
-      addBond(d, fb, 'feed', BOND_POINTS.feed);
+      if (!extraSnack) addBond(d, fb, 'feed', BOND_POINTS.feed);
     });
+    // くいしんぼうの子は、ときどき「おかわり」したがる
+    const line = extraSnack ? pick(FOODIE_SNACK_LINES) : personalityTop(s).main === 'foodie' && Math.random() < 0.5 ? pick(FOODIE_EAT_LINES) : f.line;
     // 食べる・飲むしぐさ（にんじんは専用の絵、ほかは手に持たせる）
     const motion = f.motion ?? 'eat';
     react(
       {
         pose: f.pose,
         anim: motion === 'drink' ? 'sip' : 'chew',
-        line: f.line,
+        line,
         fx: motion === 'drink' ? '♪' : undefined,
         hold: f.pose === 'eat_base' || outfit ? { motion, icon: f.emoji, cup: f.cup } : null,
       },
@@ -267,7 +278,7 @@ export default function Home() {
     update((d, fb) => {
       markActive(d, fb);
       addBond(d, fb, 'play', BOND_POINTS.play);
-      // 初めてのおもちゃは「ぼうけん」、2回目以降はおもちゃごとの性格
+      // 初めてのおもちゃは「こうきしん」、2回目以降はおもちゃごとの性格
       if (!d.usedToys.includes(id)) {
         d.usedToys.push(id);
         addPersonality(d, 'adventurous');
@@ -538,7 +549,7 @@ export default function Home() {
                             {f.label}
                           </button>
                         ))}
-                      {specialFoods.length > 0 && <div className="menu-label">おやつ{canEatSnack(s) ? '（1日1回）' : '：また明日ね'}</div>}
+                      {specialFoods.length > 0 && <div className="menu-label">おやつ{canEatSnack(s) ? `（1日${snackLimit(s)}回）` : '：また明日ね'}</div>}
                       {canEatSnack(s) &&
                         specialFoods.map((it) => (
                           <button key={it.id} className="special" onClick={() => feed({ emoji: it.icon, pose: it.food!.pose, line: it.food!.line, motion: it.food!.motion, cup: it.food!.cup }, true)}>

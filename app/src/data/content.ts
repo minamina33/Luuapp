@@ -136,6 +136,12 @@ export const TOY_PLAY: Record<string, { pose: string; anim: string; line: string
   toy_ehon: { pose: 'g_think', anim: 'tilt', line: 'つぎのページは…どうなるのかな' },
   toy_horse: { pose: 'g_happy', anim: 'sway', line: 'ゆーらゆーら♪ たのしい！' },
   toy_piano: { pose: 'd_spin', anim: 'hop', line: 'ぽろろん♪ じょうずにひけたかな？' },
+  toy_cushion: { pose: 'tereru', anim: 'sway', line: 'ふかふか…{you}のにおいがする' },
+  toy_letterset: { pose: 'p_amae', anim: 'tilt', line: '{you}に、おてがみかいてるの' },
+  toy_loupe: { pose: 'kangae', anim: 'tilt', line: 'むむっ…ちいさな模様が見える！' },
+  toy_globe: { pose: 'g_lookup', anim: 'tilt', line: 'くるくる…つぎは、ここに行ってみたいな' },
+  toy_mamagoto: { pose: 'ureshii', anim: 'hop', line: 'いらっしゃいませ〜！にんじんスープです' },
+  toy_cookie: { pose: 'eat', anim: 'tilt', line: 'うさぎのかたち！…たべちゃだめ？' },
 };
 export const PET_LINES = [
   ['…（じっとしている）', 'ちょっとくすぐったい'],
@@ -168,7 +174,12 @@ const PERSONALITY_LINES: Record<string, string[]> = {
   calm: ['ふぁ…ひなたぼっこしたいな', 'のんびりもいいよね', 'ゆっくりしよ〜'],
   affectionate: ['ぎゅってしていい？', '{you}のそばがすき', 'なでてくれる？'],
   adventurous: ['あのね、このあいだ不思議なものを見たんだ', '窓の外、なにがあるのかな', 'つぎはどこに行こうかな'],
+  foodie: ['なんだか、いいにおいがする…', 'おやつの時間、まだかな？', 'いっしょに、もぐもぐしたいな'],
 };
+/** くいしんぼうの子が、ごはんのときにときどき言うこと */
+/** くいしんぼうの子の、ふえた分のおやつのとき */
+export const FOODIE_SNACK_LINES = ['えへへ、もう1こ…いいの？', 'おやつのおかわり、しあわせ〜', 'ないしょのおやつだね'];
+export const FOODIE_EAT_LINES = ['もぐもぐ…おかわり、ある？', 'これ、だいすき！しあわせ〜', 'ごちそうさま…でも、まだ入るかも'];
 const LOW_MOOD_LINES = ['今日はゆっくりしようね', '{me}がそばにいるよ', '{you}のペースで大丈夫', 'なにもしなくてもいいんだよ', 'あったかいもの、のむ？', 'ここにいるからね'];
 const GOOD_MOOD_LINES = ['{you}、なんだかうれしそう！', 'いい日だね', '{me}もうれしいな'];
 const AFTER_CARE_LINES = ['さっきの、すてきだったね', '自分のこと、大事にしてるね', 'ちょっとひと息つけた？'];
@@ -217,6 +228,7 @@ export const IDLE_POSES: Record<Personality | 'none', Array<{ pose: string; anim
   calm: [{ pose: 'kutsurogi', anim: 'sway' }, { pose: 'g_yawn', anim: 'tilt' }],
   affectionate: [{ pose: 'tereru', anim: 'tilt' }, { pose: 'p_amae', anim: 'sway' }],
   adventurous: [{ pose: 'kangae', anim: 'tilt' }, { pose: 'g_lookup', anim: 'tilt' }],
+  foodie: [{ pose: 'ureshii', anim: 'hop' }, { pose: 'smile', anim: 'tilt' }],
 };
 
 // ---------- 冒険の物語 ----------
@@ -227,6 +239,7 @@ const STORY: Record<Exclude<Area, 'premiumArea'>, Record<Personality | 'none', s
     calm: '{name}は花の森の木かげでひと休み。目をさますと、そばに「{item}」がおちていたよ。',
     affectionate: '{name}は花の森で、{you}へのおみやげをさがしたよ。「{item}」、よろこんでくれるかな？',
     adventurous: '{name}は花の森のまだ行ったことのない小道へ。その先で「{item}」を見つけたよ！',
+    foodie: '{name}は花の森で、あまいにおいのするほうへ…。そこにあったのは「{item}」！',
   },
   moonLake: {
     none: '{name}は月あかりの湖のほとりを歩いたよ。水ぎわで「{item}」がきらりと光ったんだ。',
@@ -234,6 +247,7 @@ const STORY: Record<Exclude<Area, 'premiumArea'>, Record<Personality | 'none', s
     calm: '{name}は湖にうつる月をしずかにながめていたよ。気がつくと足もとに「{item}」が。',
     affectionate: '{name}は湖の水面に{you}の顔を思いうかべたよ。そのとき見つけたのが「{item}」。',
     adventurous: '{name}は湖のむこう岸までいってみたよ。そこでひろったのは「{item}」！',
+    foodie: '{name}は湖のほとりでおべんとうをひろげたよ。食べおわったら、となりに「{item}」が。',
   },
   starHill: {
     none: '{name}は星空の丘にのぼって、夜空を見上げたよ。草のあいだに「{item}」がひかっていたんだ。',
@@ -241,6 +255,7 @@ const STORY: Record<Exclude<Area, 'premiumArea'>, Record<Personality | 'none', s
     calm: '{name}は丘でごろんと寝ころんで星をかぞえたよ。そっと「{item}」がふってきたんだ。',
     affectionate: '{name}は流れ星に「{you}が元気でいますように」っておねがいしたよ。そしたら「{item}」が！',
     adventurous: '{name}は丘のひみつのほら穴をのぞいてみたよ。おくにあったのは「{item}」！',
+    foodie: '{name}は丘の上で、星がこんぺいとうに見えてきたよ。手をのばしたら「{item}」が！',
   },
 };
 export function storyFor(area: Area, p: Personality | null, name: string, itemTitle: string, you = 'あなた') {

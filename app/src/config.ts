@@ -62,6 +62,8 @@ export const FEEDBACK_URL = '';
 // ---- ごはん・あそぶの回数 -------------------------------------
 /** ごはんは「朝・昼・夜」の時間帯ごとに1回。おやつ（特別なごはん）は1日1回 */
 export const SNACKS_PER_DAY = 1;
+/** くいしんぼうの子は、おやつをこの回数ぶん多く食べられる（ふえた分は親密度なし。楽しさだけ） */
+export const FOODIE_EXTRA_SNACKS = 1;
 /** あそべる回数＝基本＋その日のセルフケアの数（上限あり） */
 export const PLAY_BASE = 2;
 export const PLAY_MAX = 5;
@@ -85,13 +87,16 @@ export const PERSONALITY_NAMES: Record<Personality, string> = {
   energetic: 'げんき',
   calm: 'おっとり',
   affectionate: 'あまえんぼ',
-  adventurous: 'ぼうけん',
+  adventurous: 'こうきしん',
+  foodie: 'くいしんぼう',
 };
 export const PERSONALITY_POINT = 2;
 /** 1日に加算できる性格ポイントの上限（性格ごと。なでるだけで他の性格の分を使い切らないように） */
 export const PERSONALITY_DAILY_CAP = 3;
 /** 性格が見えてくるのに必要な点数の合計（これより少ないうちは「まだわからない」） */
 export const PERSONALITY_REVEAL_POINTS = 20;
+/** くいしんぼうの点が入るのは1日このごはんの回数まで（ほぼ毎日あげるので、伸びすぎないように） */
+export const FOODIE_MEALS_PER_DAY = 2;
 
 // ---- 冒険 -------------------------------------------------------
 export const RARITY_RATES: Record<Rarity, number> = {

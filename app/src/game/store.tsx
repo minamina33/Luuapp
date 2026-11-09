@@ -60,6 +60,8 @@ export function migrate(s: GameState): GameState {
       // v0.4: 複数のるう。1匹目に id・色・その子のみつけたもの帳を補う
       if (s.pet && !s.pet.found) s.pet.found = { ...(s.discovered ?? {}) };
       if (!s.sky) (s as GameState).sky = { stars: [], names: {} };
+      // v0.13: 性格「くいしんぼう」を追加。前のデータには点数がないので 0 で補う
+      for (const p of [s.pet, ...(s.otherPets ?? [])]) if (p) p.personalityScores = { ...base.pet.personalityScores, ...p.personalityScores };
       return { ...base, ...s, pet: { ...base.pet, ...s.pet, roomSlots: { ...base.pet.roomSlots, ...s.pet?.roomSlots } }, debug: { ...base.debug, ...s.debug }, settings: { ...base.settings, ...s.settings } };
     }
   }

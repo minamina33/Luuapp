@@ -9,7 +9,7 @@ export type CareKind =
   | 'meditation'
   | 'compassion'
   | 'connection';
-export type Personality = 'energetic' | 'calm' | 'affectionate' | 'adventurous';
+export type Personality = 'energetic' | 'calm' | 'affectionate' | 'adventurous' | 'foodie';
 export type ItemCategory = 'furniture' | 'outfit' | 'toy' | 'collectible';
 export type Rarity = 'common' | 'rare' | 'superRare' | 'secret';
 export type Area = 'flowerForest' | 'moonLake' | 'starHill' | 'premiumArea';
@@ -36,7 +36,7 @@ export interface Pet {
   found: Record<string, string>;
   name: string;
   /** その日のごはん・おやつ・あそんだ回数 */
-  daily?: { day: string; meals: string[]; snack: boolean; plays: number };
+  daily?: { day: string; meals: string[]; snack: boolean; snacks?: number; plays: number }; // snacks：その日のおやつの回数（前のデータは snack だけ）
   totalBondPoints: number;
   /** ふれあいがあった日（YYYY-MM-DD）。Stageはこの件数から導出 */
   activeDays: string[];
@@ -133,6 +133,7 @@ export interface ItemDef {
   chestColors?: [string, string, string]; // タンスの色（本体・影・取っ手）
   sprite?: string; // 衣装の差分画像
   playPersonality?: Personality; // おもちゃで遊ぶと伸びる性格
+  tasty?: boolean; // 食べられないけど、食べもの・飲みもの系の見た目（くいしんぼうの子が見つけやすい）
   desc?: string;
   /** 色シリーズ：その色の子の冒険でだけ見つかる */
   series?: ColorId;
