@@ -4,17 +4,19 @@
   --card: #fff;
   --line: #f0e2d6;
   --ink: #5e4537;
-  --ink-2: #8a7062;
-  --muted: #a8917f;
+  --ink-2: #6f5949;
+  --muted: #7a6453;
   --accent: #e9967f;
   --accent-2: #f5b9a5;
   --accent-soft: #fde8df;
+  /* 文字に使うコーラル（白やうすい背景の上でも読みやすい濃さ） */
+  --accent-ink: #b04a34;
   --pink: #f2a7b8;
   --pink-soft: #fde6ec;
   --mint: #9fcfb6;
   --lav: #b9b0e6;
   --gold: #f2c35b;
-  --danger: #d0675a;
+  --danger: #b44233;
   --shadow: 0 6px 20px rgba(150, 100, 70, 0.12);
   --r: 18px;
   font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', 'Hiragino Sans', system-ui, sans-serif;
@@ -57,10 +59,20 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: var(--accent-2);
+  border-color: var(--accent-ink);
+}
+/* キーボードで操作したとき、いまどこを選んでいるか見えるように */
+:focus-visible {
+  outline: 2.5px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
 }
 a {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 h1,
 h2,
@@ -139,7 +151,7 @@ h3 {
 }
 .mini-chip.pink {
   background: var(--pink-soft);
-  color: #e57f98;
+  color: #b4405c;
   letter-spacing: -1px;
 }
 .faint {
@@ -212,7 +224,7 @@ h3 {
   opacity: 0.75;
 }
 .tabbar button.on {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
 }
 .tabbar button.on .tab-ico {
@@ -850,13 +862,14 @@ h3 {
   opacity: 0.5;
 }
 .btn.primary {
-  background: linear-gradient(135deg, #f0a28b, #e88a74);
+  /* 白い文字が読みやすい濃さのコーラル */
+  background: linear-gradient(135deg, #bd5741, #b04a34);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(233, 138, 116, 0.35);
+  box-shadow: 0 4px 12px rgba(176, 74, 52, 0.3);
 }
 .btn.soft {
   background: var(--accent-soft);
-  color: #c86f58;
+  color: var(--accent-ink);
 }
 .btn.ghost {
   background: transparent;
@@ -1061,7 +1074,7 @@ h3 {
 .tag.on {
   border-color: var(--accent-2);
   background: var(--accent-soft);
-  color: #c86f58;
+  color: var(--accent-ink);
 }
 .mood-pick {
   display: flex;
@@ -1291,7 +1304,7 @@ textarea.journal {
   border-color: #d5ebdd;
 }
 .care-card.done small {
-  color: #5fa57f;
+  color: #42755a;
 }
 .care-card.soon {
   opacity: 0.55;
@@ -1493,11 +1506,11 @@ textarea.journal {
 }
 .rarity.r-rare {
   background: #dfeafc;
-  color: #4f78b8;
+  color: #446ba7;
 }
 .rarity.r-superRare {
   background: #ece0fd;
-  color: #8a5cc9;
+  color: #8251c5;
 }
 .rarity.r-secret {
   background: linear-gradient(90deg, #ffe08a, #ffb8c9);
@@ -1524,11 +1537,11 @@ textarea.journal {
 .shop-card .price {
   margin-top: 2px;
   font-weight: 700;
-  color: #c98c1e;
+  color: #8d6215;
 }
 .owned-tag {
   font-size: 11px;
-  color: #5fa57f;
+  color: #42755a;
 }
 .badge.plus {
   position: absolute;
@@ -1632,7 +1645,7 @@ textarea.journal {
 .adv-area {
   font-size: 13px;
   background: #f1ecfb;
-  color: #7b6bb8;
+  color: #6f5db1;
   border-radius: 999px;
   padding: 4px 12px;
 }
@@ -1666,7 +1679,7 @@ textarea.journal {
 .adv-stars {
   font-size: 18px;
   font-weight: 700;
-  color: #c98c1e;
+  color: #8d6215;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1754,7 +1767,7 @@ textarea.journal {
   color: #cdbcae;
 }
 .z-cell.unknown small {
-  color: #c9b8a9;
+  color: var(--muted);
 }
 
 /* 設定 */
@@ -1950,7 +1963,7 @@ textarea.journal {
   background: var(--accent-soft);
   border-radius: 12px;
   padding: 8px 10px;
-  color: #b9674f;
+  color: var(--accent-ink);
 }
 .oversleep {
   background: rgba(255, 255, 255, 0.92);
@@ -2426,7 +2439,7 @@ textarea.journal {
 }
 .dev-grid button.dev-hl {
   background: #fde8df;
-  color: #b9674f;
+  color: var(--accent-ink);
   font-weight: 700;
 }
 .chest-top.l {
@@ -2554,7 +2567,7 @@ button.hdr-pet {
 }
 .here-tag {
   font-size: 11px;
-  color: #c86f58;
+  color: var(--accent-ink);
   background: var(--accent-soft);
   border-radius: 999px;
   padding: 3px 8px;
@@ -2602,7 +2615,7 @@ button.hdr-pet {
 }
 .first-pet {
   display: block;
-  color: #c86f58;
+  color: var(--accent-ink);
   font-weight: 700;
 }
 .zukan-head {
@@ -3002,7 +3015,7 @@ textarea.code-box {
 }
 .care-count.full {
   background: linear-gradient(90deg, #fff1d6, #ffe6ee);
-  color: #b9674f;
+  color: var(--accent-ink);
   font-weight: 700;
 }
 .today-done {
@@ -3142,7 +3155,7 @@ textarea.code-box {
 .today-tag {
   font-size: 10px;
   background: var(--accent-soft);
-  color: #c86f58;
+  color: var(--accent-ink);
   border-radius: 999px;
   padding: 1px 7px;
   margin-left: 4px;
@@ -3284,7 +3297,7 @@ textarea.code-box {
 .charm-notes .cn-title {
   font-weight: 700;
   font-size: 12px;
-  color: #c98c1e;
+  color: #8d6215;
   margin-bottom: 2px;
 }
 .charm-notes p {
@@ -3530,7 +3543,7 @@ textarea.code-box {
   background: #fff;
   border-radius: 999px;
   padding: 1px 8px;
-  color: #9a7fc7;
+  color: #7b58b6;
   margin-left: 4px;
 }
 .goal.habit {
@@ -3690,7 +3703,7 @@ a.btn {
   margin-top: 2px;
 }
 .counter.max {
-  color: #d9826b;
+  color: var(--accent-ink);
 }
 .limit-note {
   background: #fff3e6;
@@ -3720,7 +3733,7 @@ a.btn {
 .mood-left b {
   font-size: 11px;
   font-weight: 700;
-  color: #d9826b;
+  color: var(--accent-ink);
   margin-left: 2px;
 }
 .mood-icons.done {
@@ -3778,7 +3791,7 @@ a.btn {
 .day-act b {
   margin-left: 4px;
   font-weight: 700;
-  color: #7a9a62;
+  color: #5a7148;
 }
 .center-chips {
   justify-content: center;
@@ -3888,7 +3901,7 @@ a.btn {
 .guide-day {
   font-size: 11px;
   font-weight: 700;
-  color: #d9826b;
+  color: var(--accent-ink);
 }
 .low-card {
   background: #f4f1fb;
@@ -3913,7 +3926,7 @@ a.btn {
   font: inherit;
   font-size: 14px;
   font-weight: 700;
-  color: #9b8578;
+  color: var(--muted);
   background: transparent;
 }
 .page-switch button.on {
@@ -3959,7 +3972,7 @@ a.btn {
 .hl-tel {
   font-size: 20px;
   font-weight: 700;
-  color: #d9826b;
+  color: var(--accent-ink);
   letter-spacing: 0.04em;
 }
 .help-entry {

@@ -118,7 +118,7 @@ function Mine() {
                   {ms3.length > 0 && (
                     <div className="day-moods">
                       {ms3.map((m) => (
-                        <button key={m.id} className="day-mood" onClick={() => nav.open({ k: 'moodEdit', id: m.id })} title={MOODS.find((x) => x.value === m.value)?.label}>
+                        <button key={m.id} className="day-mood" onClick={() => nav.open({ k: 'moodEdit', id: m.id })} title={MOODS.find((x) => x.value === m.value)?.label} aria-label={`${fmtTime(m.at)}の気分：${MOODS.find((x) => x.value === m.value)?.label}（なおす）`}>
                           <MoodFace value={m.value as MoodValue} size={30} />
                           <small>{fmtTime(m.at)}</small>
                         </button>
