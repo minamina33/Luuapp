@@ -24,14 +24,14 @@ import {
 } from '../game/logic';
 import { OUTINGS, sleepTalk, linePool, withYou, BASIC_PLAYS, FOODS, IDLE_LINES, IDLE_POSES, MOODS, MORNING_LINES, NIGHT_LINES, PET_LINES, TOY_PLAY, FOODIE_EAT_LINES, FOODIE_SNACK_LINES } from '../data/content';
 import { item, ITEMS } from '../data/items';
-import type { MoodValue } from '../types';
+import type { CareTask, MoodValue } from '../types';
 import { sound } from '../sound';
 import { Egg } from '../components/Egg';
 import { isStandalone, letterAuthor, unreadLetter } from '../sheets/Letter';
 import { AREA_INFO } from '../config';
 import { dreamPreview, seasonOf, canEatMeal, canEatSnack, snackLimit, snacksEaten, careCountToday, MEAL_NAMES, mealSlot, nextMeal, petDaily, playsLeft, tasksForToday } from '../game/logic';
 import { CHEER_AT, MOOD_PER_DAY } from '../config';
-import { goHome } from '../sheets/Care';
+import { goHome, toggleTask } from '../sheets/Care';
 import { daysToNextStage, TOKUI_ACTS, dayNumber, lowStreak, skyOpen, OUTING_AUTO_RETURN_H, ASK_WAKE_HOURS, autoWakeAt, canCancelSleep, cancelSleep, lastNightSolo, nightCharms, shouldAutoWake, soloSleeping } from '../game/logic';
 import { CHARMS, MAX_CHARMS } from '../data/charms';
 import { charmsFor } from '../game/logic';
@@ -92,6 +92,16 @@ export default function Home() {
   const reduce = s.settings.reduceMotion;
   const todayMoods = s.moods.filter((m) => m.at && today(s) === dayKey(m.at));
   const lastMood = todayMoods[todayMoods.length - 1];
+  // おやすみの確認で出す、やさしいひとこと（責めない：「押し忘れ」と「書きたければどうぞ」として聞く）
+  // つらい日は出さずに、いつものやさしい言葉だけにする
+  const lowToday = !!lastMood && lastMood.value <= 2;
+  const nightLeft = tasksForToday(s.tasks, ms).filter((t) => t.when === 'night' && !s.completions.some((c) => c.kind === 'task' && c.taskId === t.id && c.day === today(s)));
+  const journaled = s.completions.some((c) => c.kind === 'journal' && c.day === today(s));
+  function checkBeforeSleep(t: CareTask) {
+    toggleTask(s, update, t);
+    // このあとすぐ眠るので、おへやでのひとことは出さない
+    update((d) => void (d.lastCare && (d.lastCare.seen = true)));
+  }
   // いっしょにおでかけ中
   const outing = !sleeping && s.outing ? s.outing : null; // おでかけ中は先に寝ない
   const outMin = outing ? Math.max(0, Math.floor((ms - new Date(outing.startedAt).getTime()) / 60_000)) : 0;
@@ -797,6 +807,31 @@ export default function Home() {
               ) : (
                 <div className="today-done">
                   <div className="small">{s.pet.name}「今日はゆっくりできたね。それも大事なことだよ」</div>
+                </div>
+              )}
+              {!lowToday && (nightLeft.length > 0 || !journaled) && (
+                <div className="sleep-extra">
+                  {nightLeft.length > 0 && (
+                    <>
+                      <div className="se-note">夜の習慣、もうやってたらチェックしてね</div>
+                      {nightLeft.map((t) => (
+                        <div key={t.id} className="se-row">
+                          <span className="grow">{t.title}</span>
+                          <button className="btn tiny soft" onClick={() => checkBeforeSleep(t)}>
+                            ✓ やった
+                          </button>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {!journaled && (
+                    <div className="se-row">
+                      <span className="grow">ひとことだけ、今日のこと書いておく？</span>
+                      <button className="btn tiny soft" onClick={() => (setConfirmSleep(false), nav.open({ k: 'journal' }))}>
+                        📓 書く
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               {bag.length > 0 && (

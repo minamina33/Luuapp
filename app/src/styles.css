@@ -1193,12 +1193,23 @@ h3 {
   margin-top: 10px;
 }
 
+/* 日記：文字の行の高さと棒線の間かくを同じ 28px にそろえる。
+   上の余白（padding-top）の分だけ線をずらし、スクロールしても線が文字といっしょに動くようにする */
 textarea.journal {
+  --jl: 28px;
   flex: 1;
   min-height: 260px;
   resize: none;
-  line-height: 1.7;
-  background: #fff repeating-linear-gradient(transparent 0 27px, #f5ebe2 27px 28px);
+  font-size: 16px; /* iPhone で入力時に画面が拡大されないよう 16px 以上 */
+  line-height: var(--jl);
+  padding-top: 10px;
+  background-color: #fff;
+  /* 1枚目：上の余白を白でかくす（線のくり返しが余白にはみ出さないように）、2枚目：棒線 */
+  background-image: linear-gradient(#fff, #fff), repeating-linear-gradient(transparent 0 calc(var(--jl) - 1px), #f5ebe2 calc(var(--jl) - 1px) var(--jl));
+  background-size: 100% 10px, auto;
+  background-repeat: no-repeat, repeat;
+  background-position: 0 0, 0 10px;
+  background-attachment: local;
 }
 
 /* タスク */
@@ -2663,8 +2674,13 @@ button.hdr-pet {
   width: 120px;
   align-self: center;
 }
+/* 手紙：線を上の余白（14px）の分だけずらして、文字の行（32px）にそろえる */
 .letter-paper {
-  background: #fffdf8 repeating-linear-gradient(transparent 0 31px, #f3e6da 31px 32px);
+  background-color: #fffdf8;
+  background-image: linear-gradient(#fffdf8, #fffdf8), repeating-linear-gradient(transparent 0 31px, #f3e6da 31px 32px);
+  background-size: 100% 14px, auto;
+  background-repeat: no-repeat, repeat;
+  background-position: 0 0, 0 14px;
   border-radius: 16px;
   padding: 14px 16px 10px;
   box-shadow: 0 4px 16px rgba(150, 100, 70, 0.1);
@@ -2673,6 +2689,8 @@ button.hdr-pet {
 }
 .letter-paper p {
   margin: 0;
+  /* 空の行も1行ぶんの高さをとる（線とずれないように） */
+  min-height: 32px;
 }
 .letter-sign {
   text-align: right;
@@ -3026,6 +3044,28 @@ textarea.code-box {
   padding: 8px 10px;
   margin: 8px 0;
   font-size: 13px;
+}
+/* おやすみの確認：夜の習慣の押し忘れ・日記へのさそい（できたことの下に、小さく） */
+.sleep-extra {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1.5px dashed var(--line);
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-align: left;
+}
+.se-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.se-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 .today-done .td-title {
   font-weight: 700;
