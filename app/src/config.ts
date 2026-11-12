@@ -17,7 +17,7 @@ export const WELCOME_STARS = 30; // 仮
 export const STARS = {
   moodFirstOfDay: 5, // 気分記録（1日初回のみ）
   task: 10, // セルフケアタスク1件
-  taskMaxPerDay: 3, // タスク報酬は1日3件まで
+  taskMaxPerDay: 5, // タスクごとに1日1回。追加と削除をくり返して星をふやせないよう、習慣の上限（MAX_TASKS）と同じ数まで
   care: 10, // 呼吸・日記・運動など（同種は1日1回）
   sleep: 10, // 睡眠記録
 };

@@ -9,7 +9,7 @@ import { sound } from '../sound';
 import { isCrisisText } from '../secure';
 import { LIMITS, MAX_TASKS, MOOD_PER_DAY, SHRINK_AFTER_DAYS, STARS } from '../config';
 import { dayKey, doneToday, nowIso, onCare, recordSoloNight, returnHome, setCompletionTime, setWakeTime, startOuting, TIME_RANGES, today, uid } from '../game/logic';
-import { HABIT_MAP, MOOD_REASONS, MOOD_REPLIES, MOODS, recommend, RECS, REST_IDEAS, suggestHabits, SUPPORT_LINK, WALK_KINDS, OUTINGS, OUTING_REPLIES, withYou, WHEN_NAMES, type RecId } from '../data/content';
+import { GOALS, HABITS, HABIT_MAP, type HabitDef, MOOD_REASONS, MOOD_REPLIES, MOODS, recommend, RECS, REST_IDEAS, suggestHabits, SUPPORT_LINK, WALK_KINDS, OUTINGS, OUTING_REPLIES, withYou, WHEN_NAMES, type RecId } from '../data/content';
 import type { CareTask, MoodValue, OutingKind } from '../types';
 
 const pick = <T,>(a: T[]) => a[Math.floor(Math.random() * a.length)];
@@ -342,7 +342,35 @@ export function JournalSheet({ id, prompt }: { id?: string; prompt?: string }) {
 // ------------------------------------------------------------ セルフケアタスク
 const REPEAT_LABEL: Record<CareTask['repeat'], string> = { daily: '毎日', weekdays: '平日', weekends: '週末' };
 export { tasksForToday } from '../game/logic';
-import { tasksForToday } from '../game/logic';
+import { tasksForToday, timeOfDay, type Feedback } from '../game/logic';
+import type { GameState } from '../types';
+
+/** チェックしたときの、るうのひとこと */
+export const TASK_CHEERS = ['できたね！', 'すごい、えらい！', 'やったね〜！', 'ひとつ前に進んだね', '自分を大事にしてるね'];
+/** タスクのチェック・チェックはずし（ケアのタブとタスクのシートで共通）。チェックしたら true */
+export function toggleTask(s: GameState, update: (fn: (d: GameState, f: Feedback) => void) => unknown, t: CareTask): boolean {
+  if (doneToday(s, 'task', t.id)) {
+    update((d) => {
+      d.completions = d.completions.filter((c) => !(c.kind === 'task' && c.taskId === t.id && c.day === today(d)));
+    });
+    return false;
+  }
+  update((d, f) => {
+    const granted = d.ledger.filter((l) => l.action === 'task' && l.day === today(d)).length;
+    onCare(d, f, 'task', { taskId: t.id, detail: t.title, starKey: granted < STARS.taskMaxPerDay ? `care:task:${t.id}:${today(d)}` : undefined, stars: STARS.task });
+    // その場でるうが喜ぶので、おへやに戻ったときはひとことだけにする
+    if (d.lastCare) d.lastCare.cheered = true;
+  });
+  sound.se('chime');
+  return true;
+}
+/** 今の時間帯に合う習慣を上に（朝→朝の習慣、昼・夕方→昼、夜→夜。「いつでも」はそのつぎ） */
+export function sortByTime(tasks: CareTask[], ms: number) {
+  const tod = timeOfDay(ms);
+  const now = tod === 'morning' ? 'morning' : tod === 'night' ? 'night' : 'day';
+  const rank = (t: CareTask) => (t.when === now ? 0 : !t.when || t.when === 'any' ? 1 : 2);
+  return tasks.map((t, i) => ({ t, i })).sort((a, b) => rank(a.t) - rank(b.t) || a.i - b.i).map((x) => x.t);
+}
 export function TasksSheet() {
   const { s, update } = useGame();
   const nav = useNav();
@@ -353,6 +381,8 @@ export function TasksSheet() {
   const [editing, setEditing] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
   const [del, setDel] = useState<string | null>(null);
+  // 分野からえらぶ：開いている分野
+  const [cat, setCat] = useState<string | null>(null);
   const ms = Date.now() + s.debug.timeOffsetMs;
   const todays = tasksForToday(s.tasks, ms);
   const doneN = todays.filter((t) => doneToday(s, 'task', t.id)).length;
@@ -387,24 +417,39 @@ export function TasksSheet() {
     });
 
   function toggle(t: CareTask) {
-    if (doneToday(s, 'task', t.id)) {
-      update((d) => {
-        d.completions = d.completions.filter((c) => !(c.kind === 'task' && c.taskId === t.id && c.day === today(d)));
-      });
-      return;
-    }
-    update((d, f) => {
-      const granted = d.ledger.filter((l) => l.action === 'task' && l.day === today(d)).length;
-      onCare(d, f, 'task', { taskId: t.id, detail: t.title, starKey: granted < STARS.taskMaxPerDay ? `care:task:${t.id}:${today(d)}` : undefined, stars: STARS.task });
-      // このシートの中でも喜ぶので、おへやに戻ったときの反応は1回にまとめる
-      if (d.lastCare) d.lastCare.seen = true;
-    });
-    sound.se('chime');
-    const lines = ['できたね！', 'すごい、えらい！', 'やったね〜！', 'ひとつ前に進んだね', '自分を大事にしてるね'];
-    setCheer({ line: `「${t.title}」${lines[Math.floor(Math.random() * lines.length)]}`, n: Date.now() });
+    if (!toggleTask(s, update, t)) return;
+    setCheer({ line: `「${t.title}」${pick(TASK_CHEERS)}`, n: Date.now() });
     setPopId(t.id);
     window.setTimeout(() => setPopId(null), 900);
   }
+  // 習慣の一覧（おすすめ・分野からえらぶ）の1行
+  const haveIds = s.tasks.map((t) => t.libId ?? '');
+  const habitRow = (h: HabitDef) => {
+    const have = haveIds.includes(h.id);
+    return (
+      <div key={h.id} className="rec-habit">
+        <div className="grow">
+          <b>{h.small}</b>
+          <small className="muted">
+            {WHEN_NAMES[h.when]}・ふつう版：{h.normal}
+          </small>
+          <div className="rh-reason">💬 {h.reason}</div>
+        </div>
+        <button
+          className={`btn tiny ${have ? 'ghost' : 'primary'}`}
+          disabled={full || have}
+          onClick={() =>
+            update((d) => {
+              if (d.tasks.some((t) => t.libId === h.id)) return;
+              d.tasks.push({ id: uid(), title: h.small, source: 'suggested', repeat: 'daily', isActive: true, libId: h.id, size: 'small', when: h.when, createdAt: nowIso(d) });
+            })
+          }
+        >
+          {have ? '追加ずみ' : '追加'}
+        </button>
+      </div>
+    );
+  };
   function add() {
     if (!title.trim() || full) return;
     update((d) => {
@@ -512,7 +557,7 @@ export function TasksSheet() {
           </span>
         </div>
       )}
-      <p className="muted small">できたらチェック。できない日があっても大丈夫だよ（星がもらえるのは1日{STARS.taskMaxPerDay}件まで）。</p>
+      <p className="muted small">できたらチェック。できない日があっても大丈夫だよ（星はタスク1つにつき1日1回もらえるよ）。</p>
       {shrink && (
         <div className="shrink-card">
           <div>
@@ -586,30 +631,16 @@ export function TasksSheet() {
       )}
       <div className="label">{s.pet.name}のおすすめ</div>
       {full && <p className="muted small">習慣は{MAX_TASKS}つまで。ふやすより、今ある習慣をたいせつにしようね（入れかえたいときは「おやすみ」か「削除」してね）。</p>}
-      <div className="rec-habits">
-        {recs.map((h) => (
-          <div key={h.id} className="rec-habit">
-            <div className="grow">
-              <b>{h.small}</b>
-              <small className="muted">
-                {WHEN_NAMES[h.when]}・ふつう版：{h.normal}
-              </small>
-              <div className="rh-reason">💬 {h.reason}</div>
-            </div>
-            <button
-              className="btn tiny primary"
-              disabled={full}
-              onClick={() =>
-                update((d) => {
-                  d.tasks.push({ id: uid(), title: h.small, source: 'suggested', repeat: 'daily', isActive: true, libId: h.id, size: 'small', when: h.when, createdAt: nowIso(d) });
-                })
-              }
-            >
-              追加
-            </button>
-          </div>
+      <div className="rec-habits">{recs.map(habitRow)}</div>
+      <div className="label">分野からえらぶ</div>
+      <div className="chips">
+        {GOALS.map((g) => (
+          <button key={g.id} className={`tag ${cat === g.id ? 'on' : ''}`} onClick={() => setCat(cat === g.id ? null : g.id)}>
+            {g.emoji} {g.label}
+          </button>
         ))}
       </div>
+      {cat && <div className="rec-habits habit-browse">{HABITS.filter((h) => h.goal === cat).map(habitRow)}</div>}
       <div className="program-card">
         <b>テーマプログラム</b> <span className="badge-soon">るうプラス・準備中</span>
         <div className="small muted">「2週間で眠りを整える」「休み方を練習する1週間」のように、日ごとに少しずつ変わるガイドつきのプログラムです。</div>

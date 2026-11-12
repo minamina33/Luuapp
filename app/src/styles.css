@@ -3053,6 +3053,66 @@ textarea.code-box {
   flex: 1;
   font-size: 13px;
 }
+/* ケアのタブの上のるう */
+.care-luu {
+  margin: 4px 0 6px;
+}
+.care-luu img {
+  width: 72px;
+}
+/* ケアのタブ：今日の習慣 */
+.today-habits {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.today-habits .task {
+  padding: 10px 12px;
+}
+.today-habits .task-title {
+  font-size: 15px;
+  min-height: 28px;
+}
+.habit-progress i {
+  font-size: 15px;
+}
+.habit-edit {
+  display: block;
+  margin: 8px 0 0 auto;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  color: var(--accent-ink);
+  padding: 4px 2px;
+}
+/* ケアのタブ：おすすめは1行だけ */
+.rec-line {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 14px 0 4px;
+  border: 1.5px dashed var(--line);
+  background: transparent;
+  border-radius: 14px;
+  padding: 8px 12px;
+  text-align: left;
+  font: inherit;
+  font-size: 14px;
+}
+.rec-line .rec-ico {
+  width: 32px;
+  height: 32px;
+  font-size: 17px;
+  border-radius: 10px;
+}
+/* つらい日は、すこしだけ目立たせる */
+.rec-line.gentle {
+  border-style: solid;
+  border-color: #e9d6f0;
+  background: #f8f2fb;
+}
 .cheer-hop {
   animation: hop 0.5s ease-in-out 3, breathe 3s ease-in-out 1.5s infinite;
 }
@@ -3514,6 +3574,10 @@ textarea.code-box {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+/* 分野からえらぶ：分野ボタンのすぐ下にならべる */
+.habit-browse {
+  margin-top: 8px;
 }
 .rec-habit {
   display: flex;

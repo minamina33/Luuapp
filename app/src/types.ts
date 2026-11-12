@@ -196,7 +196,8 @@ export interface GameState {
   /** 温めているたまご */
   egg: { color: ColorId; nightsLeft: number; startedAt: string; lastNight?: string } | null;
   /** 直近のセルフケア（おへやに戻ったとき、るうが喜ぶため） */
-  lastCare?: { id: string; kind: CareKind; detail?: string; at: string; seen?: boolean } | null;
+  /** さっきのケア。seen＝おへやで反応ずみ、cheered＝ケアのタブやタスクのシートでもう喜んだ（おへやではひとことだけ） */
+  lastCare?: { id: string; kind: CareKind; detail?: string; at: string; seen?: boolean; cheered?: boolean } | null;
   /** るうといっしょにおでかけ中（散歩・ストレッチ・運動） */
   outing?: { kind: OutingKind; startedAt: string } | null;
   /** おでかけから帰ってきたとき頭についている葉っぱなど（タップで払う） */

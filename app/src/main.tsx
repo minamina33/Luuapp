@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './styles.css';
 import { sound } from './sound';
+import { Capacitor } from '@capacitor/core';
 
 // ブラウザの制約で、音は最初のタップのあとに使えるようになる
 window.addEventListener('pointerdown', () => sound.unlock(), { capture: true });
@@ -13,8 +14,8 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// ホーム画面アプリ用。使えない環境（プレビューなど）では何もしない
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+// ホーム画面アプリ用。使えない環境（プレビューなど）や、iPhone アプリの中では何もしない
+if ('serviceWorker' in navigator && import.meta.env.PROD && !Capacitor.isNativePlatform()) {
   window.addEventListener('load', () => {
     try {
       navigator.serviceWorker.register('./sw.js').catch(() => {});

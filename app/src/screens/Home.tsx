@@ -22,7 +22,7 @@ import {
   today,
   wakeUp,
 } from '../game/logic';
-import { OUTINGS, sleepTalk, linePool, withYou, BASIC_PLAYS, FOODS, IDLE_LINES, IDLE_POSES, MOODS, MORNING_LINES, NIGHT_LINES, PET_LINES, recommend, RECS, TOY_PLAY, FOODIE_EAT_LINES, FOODIE_SNACK_LINES } from '../data/content';
+import { OUTINGS, sleepTalk, linePool, withYou, BASIC_PLAYS, FOODS, IDLE_LINES, IDLE_POSES, MOODS, MORNING_LINES, NIGHT_LINES, PET_LINES, TOY_PLAY, FOODIE_EAT_LINES, FOODIE_SNACK_LINES } from '../data/content';
 import { item, ITEMS } from '../data/items';
 import type { MoodValue } from '../types';
 import { sound } from '../sound';
@@ -189,6 +189,20 @@ export default function Home() {
     if (!lc || lc.seen || sleeping) return;
     if (nowMs(s) - new Date(lc.at).getTime() > 30 * 60_000) return;
     if (lc.kind === 'mood' || lc.kind === 'sleep') return;
+    // ケアのタブやタスクのシートでもう喜んだときは、跳ねずに、ひとことだけ
+    if (lc.cheered) {
+      const soft: Partial<Record<string, string>> = {
+        task: `さっきの「${lc.detail ?? 'タスク'}」、えらかったね`,
+        breathing: 'さっきの深呼吸、きもちよかったね',
+        journal: '書いてくれて、ありがとうね',
+        walk: `さっきの${lc.detail ?? '運動'}、おつかれさま`,
+      };
+      const t = window.setTimeout(() => {
+        react({ pose: 'smile', anim: 'sway', line: soft[lc.kind] ?? 'さっきはおつかれさま' }, 2800);
+        update((d) => void (d.lastCare && (d.lastCare.seen = true)));
+      }, 450);
+      return () => clearTimeout(t);
+    }
     const lines: Partial<Record<string, string>> = {
       task: `「${lc.detail ?? 'タスク'}」できたね！{me}もうれしい`,
       breathing: 'いっしょに深呼吸できたね。ふぅ〜',
@@ -332,8 +346,9 @@ export default function Home() {
 
   const specialFoods = ITEMS.filter((i) => i.food && (s.inventory[i.id] ?? 0) > 0);
   const ownedToys = ITEMS.filter((i) => i.category === 'toy' && (s.inventory[i.id] ?? 0) > 0);
-  const recs = useMemo(() => recommend(lastMood ? lastMood.value : null, lastMood?.reasons), [lastMood]);
-  const rec = RECS[recs[0]];
+  // おへやの「今日の習慣」ボタン用
+  const habits = tasksForToday(s.tasks, ms);
+  const habitsDone = habits.filter((t) => s.completions.some((c) => c.kind === 'task' && c.taskId === t.id && c.day === today(s))).length;
 
   const live = reaction && reaction.until > Date.now() ? reaction : null;
   const pose = live?.pose ?? idle?.pose ?? 'sit';
@@ -741,11 +756,17 @@ export default function Home() {
       <div className="shortcuts">
         {!showSleep && !outing && (
           <>
-            <button className="chip rec" onClick={() => nav.open({ k: 'care' })}>
+            <button className="chip rec" onClick={() => nav.setTab('kokoro')}>
               <span className="chip-ico">🌿</span>
               <span className="chip-txt">
-                <small>今日のケア</small>
-                おすすめ：{rec.title}
+                <small>今日の習慣</small>
+                {habits.length === 0
+                  ? '習慣をえらぶ'
+                  : habitsDone >= habits.length
+                    ? 'ぜんぶできたね ✓'
+                    : habitsDone === 0
+                      ? `${habits.length}つの小さな習慣`
+                      : `${habitsDone}/${habits.length} できたよ`}
               </span>
               <span className="chev">›</span>
             </button>

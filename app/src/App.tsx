@@ -22,9 +22,10 @@ import { CharmsSheet, EggsSheet, NewPetSheet, PetsSheet, SkySheet } from './shee
 import { LetterSheet, BackupSheet, TestSheet } from './sheets/Letter';
 import { AdventureSheet, BuySheet, ExchangeSheet, RoomEditSheet, SettingsSheet, SleepEditSheet, WardrobeSheet } from './sheets/Game';
 
-// タブは3つだけ。こころ（セルフケア）はおへやの「今日のケア」から、おみせはぼうけんの中から開く
+// タブは4つ。セルフケアがこのアプリのまんなかなので、おへやのすぐとなりに置く。おみせはぼうけんの中から開く
 const TABS: Array<[Tab, string, string]> = [
   ['home', 'おへや', '🏠'],
+  ['kokoro', 'ケア', '🌿'],
   ['kiroku', 'きろく', '📖'],
   ['bouken', 'ぼうけん', '🗺️'],
 ];
@@ -228,7 +229,7 @@ function Shell() {
         </main>
         <nav className="tabbar">
           {TABS.map(([t, l, e]) => (
-            <button key={t} className={tab === t || (t === 'bouken' && tab === 'shop') || (t === 'home' && tab === 'kokoro') ? 'on' : ''} onClick={() => nav.setTab(t)}>
+            <button key={t} className={tab === t || (t === 'bouken' && tab === 'shop') ? 'on' : ''} onClick={() => nav.setTab(t)}>
               <span className="tab-ico">{e}</span>
               <span>{l}</span>
               {t === 'bouken' && s.adventures.some((a) => !a.claimed) && <i className="dot-badge" />}

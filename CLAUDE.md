@@ -22,10 +22,19 @@ npm run deploy       # ビルドして、公開ファイルをリポジトリの
 
 公開までの流れ：`npm run deploy` → リポジトリのいちばん上で `git add -A` → commit → `git push`。数分でスマホのアプリにも反映される（友だちは入れ直し不要）。
 
+## iPhone アプリ（Capacitor・準備中）
+
+- `app/ios/` … Capacitor 8 の Xcode プロジェクト。設定は `app/capacitor.config.ts`（appId は仮。App Store 登録前に、会社のドメインに合わせて決め直す）。
+- `npm run ios` … ビルドして、ウェブの中身を `ios/` にコピー。`npm run ios:open` … Xcode で開く。
+- Xcode 26 以上が必要（Capacitor 8 と、App Store への提出のどちらも）。
+- アプリの中ではサービスワーカーを登録しない（`main.tsx`）。ウェブ版とアプリ版はデータの保存場所が別なので、移すときは引き継ぎコードを使う。
+- アイコン（`AppIcon-512@2x.png`）は 512px の絵を 1024px に引きのばした仮のもの。
+- App Store には合同会社の名前で出す予定（本名を出さないため）。
+
 ## 主なファイル
 
-- `src/App.tsx` … 全体の枠、タブ（おへや・きろく・ぼうけん）、シートの切りかえ、アプリのロック
-- `src/screens/` … `Home`（おへや）、`Kiroku`（きろく）、`Bouken`（ぼうけん・図鑑）、`Shop`（おみせ）、`Kokoro`（今日のケア。シートとして開く）、`Onboarding`
+- `src/App.tsx` … 全体の枠、タブ（おへや・ケア・きろく・ぼうけん）、シートの切りかえ、アプリのロック
+- `src/screens/` … `Home`（おへや）、`Kiroku`（きろく）、`Bouken`（ぼうけん・図鑑）、`Shop`（おみせ）、`Kokoro`（ケアタブ。いちばん上に今日の習慣をその場でチェックできる形でならべ、おすすめは1行だけ。習慣が主役）、`Onboarding`
 - `src/sheets/` … 下から出る画面。`Care.tsx`（気分・日記・呼吸・習慣・散歩とおでかけ・相談先）、`Game.tsx`（冒険の結果・きせかえ・もようがえ・設定）、`Letter.tsx`（手紙・引き継ぎ・テスト記録）、`Pets.tsx`（なかま・たまご・星座）
 - `src/game/logic.ts` … ゲームのしくみ全部（星・親密度・成長・性格・冒険・睡眠・おでかけ・押し忘れ対応・はじめての1週間など）
 - `src/game/store.tsx` … 状態の保存（localStorage）と、古いデータの移行（`migrate`）
