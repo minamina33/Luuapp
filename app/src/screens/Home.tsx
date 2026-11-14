@@ -316,7 +316,13 @@ export default function Home() {
     update((d, fb) => {
       markActive(d, fb);
       addBond(d, fb, 'pet', BOND_POINTS.pet);
-      addPersonality(d, 'affectionate');
+      // なでて「あまえんぼう」が育つのは1日の最初の1回だけ（+1）。
+      // なでるのはいちばん手軽なので、毎回入れるとあまえんぼうだけが伸びてしまう
+      const k = `petp:${today(d)}`;
+      if (!d.rewardKeys[k]) {
+        d.rewardKeys[k] = true;
+        addPersonality(d, 'affectionate', 1);
+      }
     });
     react({ pose: 'pet', anim: 'wiggle', line: pick(PET_LINES[lv - 1]), fx: '💗' });
   }
