@@ -9,7 +9,7 @@ const dist = join(app, 'dist');
 if (!existsSync(dist)) throw new Error('先に npm run build してね（dist/ がない）');
 
 // 前回の公開ファイルを消す（app/ や .git、説明ファイルには触らない）
-const keep = new Set(['.git', 'app', 'README.md', 'CLAUDE.md', '.gitignore', '.github']);
+const keep = new Set(['.git', 'app', 'README.md', 'CLAUDE.md', '.gitignore', '.github', 'docs']);
 for (const f of readdirSync(root)) if (!keep.has(f)) rmSync(join(root, f), { recursive: true, force: true });
 
 cpSync(dist, root, { recursive: true });
