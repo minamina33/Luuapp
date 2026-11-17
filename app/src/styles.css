@@ -3987,6 +3987,23 @@ a.btn {
   text-shadow: 0 1px 4px rgba(40, 30, 80, 0.5);
 }
 
+/* 保存できない・読みこめなかったときの案内（画面のいちばん上） */
+.storage-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 16px 0;
+  border-radius: 14px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  background: #fff3e6;
+  border: 1.5px solid #f3d6b5;
+  color: var(--ink);
+}
+.storage-notice .end {
+  justify-content: flex-end;
+}
 .soft-card {
   display: flex;
   flex-direction: column;

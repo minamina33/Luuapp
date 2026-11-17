@@ -5,7 +5,9 @@ import { Confirm, Sheet } from '../components/ui';
 import { LuuImg } from '../components/LuuImg';
 import { asset } from '../assets';
 import { FEEDBACK_URL } from '../config';
-import { seal, unseal, isSealed, MIN_PASS_LENGTH } from '../secure';
+import { seal, isSealed, MIN_PASS_LENGTH, passWarning } from '../secure';
+import { readCode } from '../game/backup';
+import { MAX_CODE_LENGTH } from '../game/validate';
 import { dayKey, fmtDur, sleepHours } from '../game/logic';
 import { withYou } from '../data/content';
 import { CATEGORY_NAMES, item } from '../data/items';
@@ -159,17 +161,6 @@ export function LetterSheet({ month }: { month: string }) {
 }
 
 // ------------------------------------------------------------ 引き継ぎ（バックアップ）
-const PREFIX = 'LUU1:';
-function decode(code: string): GameState | null {
-  try {
-    const t = code.trim();
-    if (!t.startsWith(PREFIX)) return null;
-    const s = JSON.parse(decodeURIComponent(escape(atob(t.slice(PREFIX.length))))) as GameState;
-    return s && s.pet && s.version === 1 ? s : null;
-  } catch {
-    return null;
-  }
-}
 export function BackupSheet() {
   const { s, importState, toast } = useGame();
   const nav = useNav();
@@ -179,9 +170,11 @@ export function BackupSheet() {
   const [showCode, setShowCode] = useState(false);
   const [input, setInput] = useState('');
   const [inPass, setInPass] = useState('');
-  const [pending, setPending] = useState<GameState | null>(null);
+  const [pending, setPending] = useState<{ state: GameState; fixes: number; legacy: boolean } | null>(null);
   const [err, setErr] = useState('');
+  const [reading, setReading] = useState(false);
   const sealedIn = isSealed(input);
+  const weak = passWarning(pass);
   const make = async () => {
     setBusy(true);
     const c = await seal(JSON.stringify(s), pass);
@@ -204,6 +197,7 @@ export function BackupSheet() {
           <div className="label">あいことば（{MIN_PASS_LENGTH}文字以上・わすれないでね）</div>
           <input type="password" value={pass} maxLength={64} onChange={(e) => (setPass(e.target.value), setCode(''))} placeholder="自分だけがわかることば" />
         </label>
+        {weak && <p className="muted tiny">💡 {weak}</p>}
         <button className="btn primary block" disabled={pass.length < MIN_PASS_LENGTH || busy} onClick={make}>
           {busy ? 'つくっています…' : code ? 'もう一度コピーする' : 'コードをつくってコピー'}
         </button>
@@ -218,51 +212,73 @@ export function BackupSheet() {
       <div className="card">
         <b>引き継ぎコードを貼りつける</b>
         <p className="muted small">別の端末やブラウザで作ったコードを貼りつけると、その内容に置きかわります。</p>
-        <textarea className="code-box" rows={4} value={input} onChange={(e) => (setInput(e.target.value), setErr(''))} placeholder="LUU から始まる文字列" />
+        <textarea
+          className="code-box"
+          rows={4}
+          value={input}
+          aria-label="引き継ぎコード"
+          onChange={(e) => {
+            const v = e.target.value;
+            // とても長い文字列は受けつけない（固まらないように）
+            if (v.length > MAX_CODE_LENGTH) return setErr('コードが長すぎます。るうの引き継ぎコードか確かめてね。');
+            setInput(v);
+            setErr('');
+          }}
+          placeholder="LUU から始まる文字列"
+        />
         {sealedIn && (
           <label className="field">
             <div className="label">そのコードのあいことば</div>
             <input type="password" value={inPass} onChange={(e) => (setInPass(e.target.value), setErr(''))} />
           </label>
         )}
-        {err && <p className="danger-text small">{err}</p>}
+        {err && (
+          <p className="danger-text small" role="alert">
+            {err}
+          </p>
+        )}
         <button
           className="btn soft block"
-          disabled={!input.trim() || (sealedIn && !inPass)}
+          disabled={!input.trim() || (sealedIn && !inPass) || reading}
           onClick={async () => {
-            let d: GameState | null = null;
-            if (sealedIn) {
-              const t = await unseal(input, inPass);
-              if (t === null) return setErr('あいことばがちがうか、コードがとちゅうで切れているみたい。');
-              try {
-                const g = JSON.parse(t) as GameState;
-                d = g && g.pet && g.version === 1 ? g : null;
-              } catch {
-                d = null;
-              }
-            } else d = decode(input); // 前の形式（LUU1）も読める
-            if (!d) setErr('コードを読みこめませんでした。最初から最後まで全部貼りつけてね。');
-            else setPending(d);
+            setReading(true);
+            const r = await readCode(input, inPass);
+            setReading(false);
+            if (!r.ok) return setErr(r.error);
+            setPending({ state: r.state, fixes: r.fixes, legacy: r.legacy });
           }}
         >
-          読みこむ
+          {reading ? '読みこんでいます…' : '読みこむ'}
         </button>
       </div>
       {pending && (
         <Confirm
           text={
             <>
-              「{pending.pet.name}」のデータに置きかえますか？
+              「{pending.state.pet.name}」のデータに置きかえますか？
               <br />
               <span className="muted small">いまの端末の記録は消えます（先にコピーしておくと安心です）。</span>
+              {pending.legacy && (
+                <>
+                  <br />
+                  <span className="muted small">これは鍵のかかっていない前の形式のコードです。読みこんだら、新しいコードを作りなおしておくと安心です。</span>
+                </>
+              )}
+              {pending.fixes > 0 && (
+                <>
+                  <br />
+                  <span className="muted small">形がこわれていた記録が{pending.fixes}件あったので、それはのぞいて読みこみます。</span>
+                </>
+              )}
             </>
           }
           okLabel="置きかえる"
           danger
           cancel={() => setPending(null)}
           ok={() => {
-            importState(pending);
+            const ok = importState(pending.state);
             setPending(null);
+            if (!ok) return setErr('読みこみに失敗しました。いまの記録はそのまま残っています。');
             nav.close();
             toast('データを引き継ぎました');
           }}

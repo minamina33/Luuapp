@@ -81,6 +81,41 @@ function Header({ onSettings, onPets }: { onSettings: () => void; onPets: () => 
   );
 }
 
+/** 保存できない・前の記録を読めなかったときの案内（責めずに、何をすればいいかを伝える） */
+function StorageNotice() {
+  const { storageOk, loadStatus, repaired, dismissLoadNotice } = useGame();
+  const nav = useNav();
+  let text = '';
+  let canClose = true;
+  if (loadStatus === 'stuck') {
+    text = '前の記録を読みこめませんでした。消してしまわないよう、いまは保存を止めています。引き継ぎコードがあれば「データの引き継ぎ」から元にもどせます。';
+    canClose = false;
+  } else if (loadStatus === 'recovered') {
+    text = '前の記録を読みこめなかったので、はじめから始めています。前の記録は消さずに、この端末にとっておいてあります。';
+  } else if (!storageOk) {
+    text = '記録を保存できていません（スマホの空きが少ないか、プライベートブラウズかもしれません）。引き継ぎコードを作っておくと安心です。';
+    canClose = false;
+  } else if (repaired > 0) {
+    text = `記録の一部（${repaired}件）の形がこわれていたので、それをのぞいて読みこみました。ほかの記録はそのままです。`;
+  }
+  if (!text) return null;
+  return (
+    <div className="storage-notice" role="alert">
+      <span>{text}</span>
+      <span className="row gap end">
+        <button className="btn tiny soft" onClick={() => nav.open({ k: 'backup' })}>
+          データの引き継ぎ
+        </button>
+        {canClose && (
+          <button className="btn tiny ghost" onClick={dismissLoadNotice}>
+            とじる
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
+
 function CareSheet() {
   const nav = useNav();
   return (
@@ -197,7 +232,14 @@ function Shell() {
   if (s.settings.lockHash && !unlocked) {
     return (
       <div className="app">
-        <LockScreen hash={s.settings.lockHash} onUnlock={() => setUnlocked(true)} />
+        <LockScreen
+          hash={s.settings.lockHash}
+          onUnlock={(newHash) => {
+            // 前の形式で保存されていた番号は、ここで今の（より強い）形式に置きかえる
+            if (newHash) update((d) => void (d.settings = { ...d.settings, lockHash: newHash }));
+            setUnlocked(true);
+          }}
+        />
       </div>
     );
   }
@@ -221,6 +263,7 @@ function Shell() {
       <div className={`app tab-${tab} ${s.settings.reduceMotion ? 'reduce-motion' : ''}`}>
         <Header onSettings={() => setSheet({ k: 'settings' })} onPets={() => setSheet({ k: 'pets' })} />
         <main className="main">
+          <StorageNotice />
           {tab === 'home' && <Home />}
           {tab === 'kokoro' && <Kokoro />}
           {tab === 'kiroku' && <Kiroku />}

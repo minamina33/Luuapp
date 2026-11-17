@@ -831,6 +831,7 @@ function LockCard() {
     <div className="card">
       <b>アプリのロック</b>
       <p className="muted small">開くたびに4けたの番号を聞きます。家族や友だちに日記をのぞかれたくないときに。</p>
+      <p className="muted tiny">※ ロックは、アプリの画面を見られないようにするためのものです。記録そのものに鍵をかけるものではないので、スマホ本体のロックもあわせて使ってね。</p>
       {step === 'idle' && (
         <button className="btn soft block" onClick={() => (setErr(''), setStep(on ? 'off' : 'new'))}>
           {on ? 'ロックをはずす' : 'ロックをかける'}

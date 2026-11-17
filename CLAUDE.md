@@ -16,6 +16,7 @@
 cd app
 npm install          # 初回だけ
 npm run dev          # 手元で動かす
+npm test             # 自動テスト（暗号化・ロック・データの形の確認・保存・危機の言葉）
 npm run build        # 型チェック＋ビルド（app/dist/）
 npm run deploy       # ビルドして、公開ファイルをリポジトリのいちばん上にコピー
 ```
@@ -55,4 +56,11 @@ npm run deploy       # ビルドして、公開ファイルをリポジトリの
 ## 動作確認のコツ
 
 - せってい →「るう 試作版」を5回タップすると開発者メニュー（時刻ずらし・成長・親密度など）。開発者メニュー中は、段階的に出る機能も全部見える。
-- データは localStorage の `luu-prototype-v1`。
+- データは localStorage の `luu-prototype-v1`。読みこめなかったデータは消さずに `luu-prototype-v1-broken` に、引き継ぎで置きかえる前のデータは `luu-prototype-v1-before-import` にとっておく。ロック番号のまちがい回数は `luu-lock-guard`。
+
+## 安全まわり（変えるときは相談）
+
+- 保存データ・引き継ぎデータは、読む前に `src/game/validate.ts` で形を確かめる（こわれた記録だけのぞく）。読めないデータは決して上書きしない（`store.tsx` の `loadFrom`）。
+- ロック番号は PBKDF2（`secure.ts`）。前の形式は、ロックを外したときに自動で置きかえる。5回まちがえると待ち時間（開き直しても続く）。何回まちがえても記録は消さない。
+- ロックは画面をかくすだけで、記録そのものは暗号化していない（保存方式の見直しは未着手。iOS は Keychain＋データ保護の案あり）。
+- 危機の言葉の判定（`isCrisisText`）は見のがしを減らす方を優先。言葉を足したら `secure.test.ts` にも足す。

@@ -3,17 +3,71 @@ import type { Celebration, GameState } from '../types';
 import { sound } from '../sound';
 import { ITEM_MAP } from '../data/items';
 import { fb, Feedback, initialState, seasonCheck } from './logic';
+import { checkState } from './validate';
 
-const KEY = 'luu-prototype-v1';
+export const KEY = 'luu-prototype-v1';
+/** 読みこめなかった（こわれていた）データを、消さずにとっておく場所 */
+export const BROKEN_KEY = `${KEY}-broken`;
+/** 引き継ぎコードで置きかえる直前のデータを、とっておく場所 */
+export const BEFORE_IMPORT_KEY = `${KEY}-before-import`;
 
-function load(): GameState {
+type Store = Pick<Storage, 'getItem' | 'setItem'>;
+/**
+ * 起動時の読みこみの結果
+ * - ok：ふつうに読めた（repaired＞0 なら、こわれた記録だけのぞいた）
+ * - recovered：読めなかったので、元のデータを BROKEN_KEY にとっておいて、はじめから
+ * - stuck：読めず、とっておくこともできなかった（上書きしないよう、保存を止める）
+ * - unavailable：保存領域そのものが使えない
+ */
+export type LoadStatus = 'ok' | 'recovered' | 'stuck' | 'unavailable';
+export interface Loaded {
+  state: GameState;
+  status: LoadStatus;
+  repaired: number;
+}
+
+/** 文字列（保存されていたJSON）を、形を確かめてから今のデータの形にする。読めなければ例外 */
+export function parseState(raw: string): { state: GameState; fixes: number } {
+  const r = checkState(JSON.parse(raw));
+  if (!r.ok) throw new Error(r.reason);
+  return { state: migrate(r.state), fixes: r.fixes };
+}
+
+/** 保存領域から読みこむ。読めなかったときも、元のデータは決して上書きしない */
+export function loadFrom(store: Store): Loaded {
+  let raw: string | null;
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw) return migrate(JSON.parse(raw) as GameState);
+    raw = store.getItem(KEY);
   } catch {
-    /* 保存領域が使えない環境でも動くようにする */
+    return { state: initialState(), status: 'unavailable', repaired: 0 };
   }
-  return initialState();
+  if (!raw) return { state: initialState(), status: 'ok', repaired: 0 };
+  try {
+    const { state, fixes } = parseState(raw);
+    // こわれた記録をのぞいたときは、念のため元の形もとっておく
+    if (fixes > 0) {
+      try {
+        store.setItem(BROKEN_KEY, raw);
+      } catch {
+        /* とっておけなくても、正しい記録は読めているので続ける */
+      }
+    }
+    return { state, status: 'ok', repaired: fixes };
+  } catch {
+    try {
+      store.setItem(BROKEN_KEY, raw);
+      return { state: initialState(), status: 'recovered', repaired: 0 };
+    } catch {
+      return { state: initialState(), status: 'stuck', repaired: 0 };
+    }
+  }
+}
+function load(): Loaded {
+  try {
+    return loadFrom(localStorage);
+  } catch {
+    return { state: initialState(), status: 'unavailable', repaired: 0 };
+  }
 }
 /** 古い形式のデータを今の形にそろえる（引き継ぎコードの読みこみでも使う） */
 export function migrate(s: GameState): GameState {
@@ -66,14 +120,31 @@ export function migrate(s: GameState): GameState {
     }
   }
 }
-function save(s: GameState) {
+/** 保存。容量不足などで書けなければ false（前に保存した内容はそのまま残る） */
+export function saveTo(store: Store & Partial<Pick<Storage, 'removeItem'>>, s: GameState) {
+  const json = JSON.stringify(s);
   try {
-    localStorage.setItem(KEY, JSON.stringify(s));
+    store.setItem(KEY, json);
     return true;
+  } catch {
+    // 容量が足りないときは、引き継ぎ前のひかえ（確認画面で了承ずみ）を消して、いまの記録を優先する
+    try {
+      if (store.getItem(BEFORE_IMPORT_KEY) === null) return false;
+      store.removeItem?.(BEFORE_IMPORT_KEY);
+      store.setItem(KEY, json);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+const save = (s: GameState) => {
+  try {
+    return saveTo(localStorage, s);
   } catch {
     return false;
   }
-}
+};
 
 export interface Toast {
   id: number;
@@ -88,17 +159,27 @@ interface Ctx {
   toasts: Toast[];
   toast: (t: string) => void;
   storageOk: boolean;
+  /** 起動時の読みこみの結果（読めなかったときの案内用） */
+  loadStatus: LoadStatus;
+  /** 起動時に、こわれた記録をのぞいた件数 */
+  repaired: number;
+  dismissLoadNotice: () => void;
   celebrations: Celebration[];
   popCelebration: () => void;
-  importState: (s: GameState) => void;
+  /** 引き継ぎコードのデータに置きかえる。置きかえる前のデータはとっておく。できなければ false（いまのデータはそのまま） */
+  importState: (s: GameState) => boolean;
 }
 const C = createContext<Ctx>(null as unknown as Ctx);
 export const useGame = () => useContext(C);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [s, setS] = useState<GameState>(load);
+  const [loaded] = useState<Loaded>(load);
+  const [s, setS] = useState<GameState>(loaded.state);
+  const [loadStatus, setLoadStatus] = useState<LoadStatus>(loaded.status);
+  const [repaired, setRepaired] = useState(loaded.repaired);
+  const dismissLoadNotice = useCallback(() => (setRepaired(0), setLoadStatus((x) => (x === 'recovered' ? 'ok' : x))), []);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [storageOk, setStorageOk] = useState(true);
+  const [storageOk, setStorageOk] = useState(loaded.status !== 'unavailable');
   const [celebrations, setCelebrations] = useState<Celebration[]>([]);
   const popCelebration = useCallback(() => setCelebrations((c) => c.slice(1)), []);
   const ref = useRef(s);
@@ -131,8 +212,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   );
 
   useEffect(() => {
+    // 読めなかった元のデータをとっておけなかったときは、上書きしないよう保存しない
+    if (loadStatus === 'stuck') return setStorageOk(false);
     setStorageOk(save(s));
-  }, [s]);
+  }, [s, loadStatus]);
+  // 別のタブ・ウィンドウで記録が変わったら、こちらもそれに合わせる（古い内容で上書きしないように）
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== KEY || !e.newValue) return;
+      try {
+        const n = parseState(e.newValue).state;
+        ref.current = n;
+        setS(n);
+      } catch {
+        /* 読めない内容なら無視する */
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
   useEffect(() => {
     sound.configure(s.settings);
   }, [s.settings]);
@@ -144,9 +242,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const importState = useCallback((x: GameState) => {
-    const n = migrate(structuredClone(x));
+    let n: GameState;
+    try {
+      n = migrate(structuredClone(x));
+    } catch {
+      return false;
+    }
+    // 置きかえる前のデータをとっておく（とっておけなくても、確認画面で了承ずみなので続ける）
+    try {
+      localStorage.setItem(BEFORE_IMPORT_KEY, JSON.stringify(ref.current));
+    } catch {
+      /* noop */
+    }
     ref.current = n;
     setS(n);
+    // 読めなかったデータの上書きを止めていた場合も、引き継いだデータは保存してよい
+    setLoadStatus((st) => (st === 'stuck' ? 'ok' : st));
+    return true;
   }, []);
 
   const reset = useCallback(() => {
@@ -160,5 +272,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setS(n);
   }, []);
 
-  return <C.Provider value={{ s, update, reset, toasts, toast, storageOk, celebrations, popCelebration, importState }}>{children}</C.Provider>;
+  return (
+    <C.Provider value={{ s, update, reset, toasts, toast, storageOk, loadStatus, repaired, dismissLoadNotice, celebrations, popCelebration, importState }}>{children}</C.Provider>
+  );
 }
