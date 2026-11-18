@@ -1,6 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
+// フォントはアプリに同梱（Google などの外部サーバーと通信しないように）。
+// 文字ごとに小分けされていて、画面に出る文字の分だけ読みこまれる。ライセンス：SIL Open Font License 1.1
+// （fonts.css は scripts/make-fonts-css.mjs でつくる。woff2 だけを同梱する）
+import './fonts.css';
 import './styles.css';
 import { sound } from './sound';
 import { Capacitor } from '@capacitor/core';

@@ -661,7 +661,10 @@ export function SettingsSheet() {
 
       <div className="card">
         <b>データについて</b>
-        <p className="muted small">気分・日記・睡眠などの記録は、この端末のブラウザの中だけに保存されます。外部への送信はしていません。{!storageOk && '（いまの環境では保存できていません。ページを閉じると消えます）'}</p>
+        <p className="muted small">気分・日記・睡眠などの記録は、この端末のブラウザの中だけに保存されます。外部への送信はしていません（文字の表示に使うフォントも、アプリの中に入っています）。{!storageOk && '（いまの環境では保存できていません。ページを閉じると消えます）'}</p>
+        <p className="muted tiny">
+          ※ 保存した記録そのものには鍵がかかっていません。家族と共有しているパソコンやスマホでは使わないでね。アプリのロックは、画面を見られないようにするためのものです。
+        </p>
         <button className="btn soft block" onClick={() => nav.open({ k: 'backup' })}>
           データの引き継ぎ（コピー／貼りつけ）
         </button>
