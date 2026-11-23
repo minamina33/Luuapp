@@ -24,6 +24,7 @@ export type SheetState =
   | { k: 'newPet'; id: string }
   | { k: 'pets' }
   | { k: 'letter'; month: string }
+  | { k: 'calendar' }
   | { k: 'backup' }
   | { k: 'charms' }
   | { k: 'sky' }

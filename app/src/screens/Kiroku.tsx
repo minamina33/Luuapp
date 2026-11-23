@@ -4,7 +4,7 @@ import { useGame } from '../game/store';
 import { useNav } from '../nav';
 import { Empty, fmtDate, fmtDateTime, fmtTime, MoodFace, Segmented } from '../components/ui';
 import { spriteUrl } from '../assets';
-import { AREA_INFO, PERSONALITY_NAMES, STAGE_DAYS } from '../config';
+import { AREA_INFO, PERSONALITY_NAMES, PREMIUM_NAME, STAGE_DAYS } from '../config';
 import { bondProgress, dayKey, fmtDur, nowMs, personalityLabel, sleepHours, stageName, stageOf, timeLabel, today } from '../game/logic';
 import { item } from '../data/items';
 import { MOODS } from '../data/content';
@@ -49,6 +49,9 @@ function Mine() {
     .sort()
     .reverse();
   const sleeps = [...s.sleeps].reverse();
+  // 一覧は少しずつ出す（記録は全部さかのぼれる）
+  const [dayN, setDayN] = useState(30);
+  const [sleepN, setSleepN] = useState(14);
   const done = s.sleeps.filter((x) => x.endedAt && !x.unknown).slice(-7);
   const avg = done.length ? done.reduce((a, x) => a + (sleepHours(x) ?? 0), 0) / done.length : null;
   const weekComp = s.completions.filter((c) => days.includes(c.day));
@@ -79,7 +82,12 @@ function Mine() {
         </div>
       </section>
       <section>
-        <h2>気分</h2>
+        <div className="sec-head">
+          <h2>気分</h2>
+          <button className="btn tiny soft" onClick={() => nav.open({ k: 'calendar' })}>
+            📅 カレンダー{!s.player?.premiumDemo && <span className="plus-mini">{PREMIUM_NAME}</span>}
+          </button>
+        </div>
         <div className="week">
           {days.map((d) => {
             const ms2 = moodsByDay(d);
@@ -104,7 +112,7 @@ function Mine() {
           <Empty>まだ記録はありません</Empty>
         ) : (
           <div className="day-list">
-            {dayKeys.slice(0, 30).map((d) => {
+            {dayKeys.slice(0, dayN).map((d) => {
               const dt = new Date(d + 'T12:00:00');
               const ms3 = moodsByDay(d);
               const js = s.journals.filter((j) => dayKey(j.createdAt) === d).sort((x, y) => x.createdAt.localeCompare(y.createdAt));
@@ -162,6 +170,11 @@ function Mine() {
                 </div>
               );
             })}
+            {dayKeys.length > dayN && (
+              <button className="btn ghost block" onClick={() => setDayN((n) => n + 30)}>
+                もっと前を見る（あと{dayKeys.length - dayN}日）
+              </button>
+            )}
           </div>
         )}
       </section>
@@ -183,7 +196,7 @@ function Mine() {
           <Empty>まだ記録はありません</Empty>
         ) : (
           <div className="list">
-            {sleeps.slice(0, 14).map((x) => (
+            {sleeps.slice(0, sleepN).map((x) => (
               <button key={x.id} className="list-row" onClick={() => nav.open({ k: 'sleepEdit', id: x.id })}>
                 <span className="date-badge">{fmtDate(x.startedAt)}</span>
                 <span className="grow">
@@ -195,6 +208,11 @@ function Mine() {
                 <span className="chev">›</span>
               </button>
             ))}
+            {sleeps.length > sleepN && (
+              <button className="btn ghost block" onClick={() => setSleepN((n) => n + 14)}>
+                もっと前を見る（あと{sleeps.length - sleepN}件）
+              </button>
+            )}
           </div>
         )}
       </section>

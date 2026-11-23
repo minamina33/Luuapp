@@ -20,6 +20,7 @@ import Onboarding from './screens/Onboarding';
 import { MorningMoodSheet, BreathingSheet, JournalSheet, MoodSheet, RecsSheet, RestSheet, SleepInfoSheet, TasksSheet, WalkSheet, OutingBackSheet, WakeAskSheet, SoloNightSheet, HelpSheet } from './sheets/Care';
 import { CharmsSheet, EggsSheet, NewPetSheet, PetsSheet, SkySheet } from './sheets/Pets';
 import { LetterSheet, BackupSheet, TestSheet } from './sheets/Letter';
+import { CalendarSheet } from './sheets/Calendar';
 import { AdventureSheet, BuySheet, ExchangeSheet, RoomEditSheet, SettingsSheet, SleepEditSheet, WardrobeSheet } from './sheets/Game';
 
 // タブは4つ。セルフケアがこのアプリのまんなかなので、おへやのすぐとなりに置く。おみせはぼうけんの中から開く
@@ -166,6 +167,8 @@ function SheetHost({ sheet }: { sheet: SheetState | null }) {
       return <NewPetSheet id={sheet.id} />;
     case 'pets':
       return <PetsSheet />;
+    case 'calendar':
+      return <CalendarSheet />;
     case 'letter':
       return <LetterSheet month={sheet.month} />;
     case 'backup':
