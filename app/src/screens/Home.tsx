@@ -136,7 +136,12 @@ export default function Home() {
   const dayN = dayNumber(s);
   const doneKind = (k: string) => s.completions.some((c) => c.day === today(s) && c.kind === k);
   const GUIDE: Record<number, { text: string; btn: string; go: () => void; done: boolean }> = {
-    1: { text: todayMoods.length ? `夜になったら「おやすみ」を押して、${s.pet.name}といっしょに眠ろう。朝、冒険のおみやげが届くよ` : `まずは、いまの気分を下からえらんでみよう`, btn: '', go: () => {}, done: false },
+    // 1日目：いちばんの楽しみ（夢の冒険とおみやげ）を、その日のうちに予告しておく
+    1: !todayMoods.length
+      ? { text: 'まずは、いまの気分を下からえらんでみよう', btn: '', go: () => {}, done: false }
+      : tod === 'night'
+        ? { text: `🌙 そろそろ夜。「おやすみ」を押すと、${s.pet.name}のはじめての冒険がはじまるよ。どこへ行くかは、${s.pet.name}しだい`, btn: '', go: () => {}, done: false }
+        : { text: `🎁 今夜ねたら、${s.pet.name}が夢の中でおでかけするよ。あしたの朝、なにかおみやげを持って帰ってくるかも`, btn: '冒険ってなに？', go: () => nav.setTab('bouken'), done: false },
     2: { text: '小さな習慣をひとつだけ、やってみよう', btn: '習慣を見る', go: () => nav.open({ k: 'tasks' }), done: doneKind('task') },
     3: { text: 'おみせをのぞいてみよう。星で家具や服が買えるよ', btn: 'おみせへ', go: () => nav.setTab('shop'), done: false },
     4: { text: `${s.pet.name}のおへやを、もようがえしてみよう`, btn: 'もようがえ', go: () => nav.open({ k: 'room' }), done: false },
@@ -465,6 +470,7 @@ export default function Home() {
                 <button className="btn primary big" onClick={() => doWake(false)}>
                   ☀️ おはよう
                 </button>
+                {!overslept && tod === 'night' && <div className="sleep-hint">朝おきたら、このボタンを押してね。{s.pet.name}がおみやげを持って帰ってくるよ</div>}
                 {canCancelSleep(s) && (
                   <button
                     className="btn ghost small-btn sleep-cancel"
@@ -789,7 +795,7 @@ export default function Home() {
             <button className={`chip sleep ${tod === 'night' ? 'glow' : ''}`} onClick={() => setConfirmSleep(true)}>
               <span className="chip-ico">🌙</span>
               <span className="chip-txt">
-                <small>ねるとき</small>おやすみ
+                <small>{tod === 'night' ? 'ふとんに入ったら' : 'ねるときに押してね'}</small>おやすみ
               </span>
             </button>
           </>
@@ -845,7 +851,23 @@ export default function Home() {
                   {bag.map((c) => CHARMS[c].icon).join(' ')} を持って、冒険に行ってくるね
                 </div>
               )}
-              <span className="muted small">{s.pet.name}もいっしょに眠って、夢の中で冒険に出かけます。起きたら「おはよう」を押してね。</span>
+              {/* ねる→おきる の2つの手順を、ひと目でわかるように */}
+              <div className="sleep-steps">
+                <div className="ss-step">
+                  <span className="ss-ico">🌙</span>
+                  <span>
+                    <b>いま</b>「おやすみ」
+                  </span>
+                </div>
+                <span className="ss-arrow">→</span>
+                <div className="ss-step">
+                  <span className="ss-ico">☀️</span>
+                  <span>
+                    <b>起きたら</b>「おはよう」
+                  </span>
+                </div>
+              </div>
+              <span className="muted small">眠っているあいだに、{s.pet.name}は夢の中で冒険してくるよ。</span>
             </>
           }
           okLabel="おやすみ"
@@ -855,7 +877,7 @@ export default function Home() {
             setMenu(null);
             update((d) => goToSleep(d));
             sound.se('night');
-            toast(`おやすみなさい。${s.pet.name}もいっしょに眠るね`);
+            toast(`おやすみなさい。朝おきたら「☀️ おはよう」を押してね`);
           }}
         />
       )}
